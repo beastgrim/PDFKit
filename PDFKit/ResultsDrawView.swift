@@ -16,24 +16,29 @@ class ResultsDrawView: UIView {
         }
     }
     
+    private var drawAtttributes = [NSFontAttributeName: UIFont.systemFontOfSize(12), NSBackgroundColorAttributeName: UIColor.yellowColor().colorWithAlphaComponent(0.5), NSForegroundColorAttributeName: UIColor.redColor().colorWithAlphaComponent(0.5)]
+    
 
     override func drawRect(rect: CGRect) {
         let ctx = UIGraphicsGetCurrentContext()
 
-//        let transform = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: rect.size.height)
-//        CGContextConcatCTM(ctx, transform)
+        let transform = CGAffineTransform(a: 1, b: 0, c: 0, d: 1, tx: 0, ty: 160)
+        CGContextConcatCTM(ctx, transform)
         let scale: CGFloat = 1;
         
-        UIColor.redColor().set()
+        
         for res in searchResults {
+            UIColor.redColor().set()
+            
             let x = res.textRect.origin.x*scale
             let y = rect.height - res.textRect.origin.y*scale
             let width = res.textRect.size.width
             let height = res.textRect.size.height
-            CGContextFillRect(ctx, CGRectMake(x, y+height+4, width, 2))
+            CGContextFillRect(ctx, CGRectMake(x, y+height+2, width, 2))
             
             if let text = res.nextText {
-                (text as NSString).drawInRect(CGRectMake(x, y, 200, 16), withAttributes: [NSFontAttributeName: UIFont.systemFontOfSize(11)])
+                drawAtttributes[NSFontAttributeName] = UIFont.systemFontOfSize(round(height))
+                (text as NSString).drawInRect(CGRectMake(x, y, 200, height+4), withAttributes: drawAtttributes)
             }
         }
     }

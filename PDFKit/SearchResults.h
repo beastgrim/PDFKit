@@ -13,6 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SearchResults : NSObject
 @property (nonatomic, readonly) CGRect textRect;
+@property (nonatomic) CGAffineTransform transform;
 @property (nonatomic) NSString  * _Nullable nextText;
 
 + (instancetype) __unavailable new;

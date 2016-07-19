@@ -39,14 +39,16 @@
     TextPosition *tp = nil;
     for (TextPosition *pos in _positionsByLocation) {
         
-        if (pos.location >= range.location) {
+        if (pos.location > range.location) {
             break;
         }
         
         tp = pos;
     }
+        
     CGFloat offsetX = (range.location - tp.location)*tp.fontSize.width;
-    return CGRectMake(tp.origin.x + offsetX, tp.origin.y, tp.fontSize.width*range.length, tp.fontSize.height);
+    CGFloat width = tp.fontSize.width*range.length;
+    return CGRectMake(tp.origin.x + offsetX, tp.origin.y, width, tp.fontSize.height);
 }
 
 - (NSString *)description {

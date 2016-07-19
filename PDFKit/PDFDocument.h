@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "SearchResults.h"
+#import "ReaderContentView.h"
 
 @interface PDFDocument : NSObject
 
@@ -16,5 +17,7 @@
 - (instancetype __nullable)initWithData:(NSData* __nonnull)pdfData;
 - (NSArray <SearchResults*> * __nonnull) searchText:(NSString * __nonnull)text;
 - (NSArray <SearchResults*> * __nonnull) searchText:(NSString * __nonnull)text onPage:(NSUInteger)pageNumber;
+
+- (ReaderContentView*) viewForPageNumber:(NSInteger)pageNumber;
 
 @end

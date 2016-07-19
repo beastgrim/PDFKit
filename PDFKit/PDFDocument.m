@@ -78,4 +78,19 @@
     return nil;
 }
 
+- (ReaderContentView*) viewForPageNumber:(NSInteger)pageNumber {
+    
+    CGPDFPageRef page = [self pageWithIndex:pageNumber];
+    if (page) {
+        CGRect cropBoxRect = CGPDFPageGetBoxRect(page, kCGPDFCropBox);
+//        CGRect mediaBoxRect = CGPDFPageGetBoxRect(page, kCGPDFMediaBox);
+        CGSize size = cropBoxRect.size;
+        
+        CGRect contentRect = {CGPointZero, size};
+        ReaderContentView * contentView = [[ReaderContentView alloc] initWithFrame:contentRect PDFDocRef:documentRef fileURL:nil page:0 superviewWidth:[UIScreen mainScreen].bounds.size.width];
+        return contentView;
+    }
+    return nil;
+}
+
 @end

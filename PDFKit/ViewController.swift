@@ -10,7 +10,12 @@ import UIKit
 
 class ViewController: UIViewController {
     
-    @IBOutlet var textView: UITextView!
+    @IBOutlet var drawResultsView: ResultsDrawView! {
+        didSet {
+            drawResultsView.opaque = false
+            drawResultsView.backgroundColor = UIColor.clearColor()
+        }
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,9 +39,13 @@ class ViewController: UIViewController {
             return
         }
         
+        let pdfPageView = document.viewForPageNumber(0)
+        view.addSubview(pdfPageView)
+        
         let results = document.searchText("кто", onPage: 0)
         
-        (view as? ResultsDrawView)?.searchResults = results
+        view.bringSubviewToFront(drawResultsView)
+        drawResultsView.searchResults = results
         
         print("Success open PDF, number pages is \(document.numberOfPages). Results: \(results)")
     }

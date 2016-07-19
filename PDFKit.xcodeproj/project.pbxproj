@@ -7,9 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		90014EDC1D3E799D00E0283F /* ReaderContentView.m in Sources */ = {isa = PBXBuildFile; fileRef = 90014EDB1D3E799D00E0283F /* ReaderContentView.m */; };
+		90014EDF1D3E7A8200E0283F /* ReaderContentPage.m in Sources */ = {isa = PBXBuildFile; fileRef = 90014EDE1D3E7A8200E0283F /* ReaderContentPage.m */; };
+		90014EE31D3E7AAD00E0283F /* ReaderThumbView.m in Sources */ = {isa = PBXBuildFile; fileRef = 90014EE21D3E7AAD00E0283F /* ReaderThumbView.m */; };
+		90014EE91D3E7B2900E0283F /* ReaderConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 90014EE81D3E7B2900E0283F /* ReaderConstants.m */; };
+		90014EEB1D3E7B3700E0283F /* ReaderContentTile.m in Sources */ = {isa = PBXBuildFile; fileRef = 90014EEA1D3E7B3700E0283F /* ReaderContentTile.m */; };
 		903043141D24268F0060290E /* test.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 903043131D24268F0060290E /* test.pdf */; };
 		903043171D2427030060290E /* SearchResults.m in Sources */ = {isa = PBXBuildFile; fileRef = 903043161D2427030060290E /* SearchResults.m */; };
 		903043191D242CBC0060290E /* ResultsDrawView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 903043181D242CBC0060290E /* ResultsDrawView.swift */; };
+		9031ADC01D265BC100CB04AE /* PDFFont.m in Sources */ = {isa = PBXBuildFile; fileRef = 9031ADBF1D265BC100CB04AE /* PDFFont.m */; };
 		90DA1DC51D1C48EB00519EE9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DA1DC41D1C48EB00519EE9 /* AppDelegate.swift */; };
 		90DA1DC71D1C48EB00519EE9 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DA1DC61D1C48EB00519EE9 /* ViewController.swift */; };
 		90DA1DCA1D1C48EB00519EE9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 90DA1DC81D1C48EB00519EE9 /* Main.storyboard */; };
@@ -35,10 +41,22 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		90014EDA1D3E799D00E0283F /* ReaderContentView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReaderContentView.h; sourceTree = "<group>"; };
+		90014EDB1D3E799D00E0283F /* ReaderContentView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReaderContentView.m; sourceTree = "<group>"; };
+		90014EDD1D3E7A8200E0283F /* ReaderContentPage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReaderContentPage.h; sourceTree = "<group>"; };
+		90014EDE1D3E7A8200E0283F /* ReaderContentPage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReaderContentPage.m; sourceTree = "<group>"; };
+		90014EE01D3E7A9700E0283F /* ReaderConstants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReaderConstants.h; sourceTree = "<group>"; };
+		90014EE11D3E7AAD00E0283F /* ReaderThumbView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReaderThumbView.h; sourceTree = "<group>"; };
+		90014EE21D3E7AAD00E0283F /* ReaderThumbView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReaderThumbView.m; sourceTree = "<group>"; };
+		90014EE51D3E7AEC00E0283F /* ReaderContentTile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReaderContentTile.h; sourceTree = "<group>"; };
+		90014EE81D3E7B2900E0283F /* ReaderConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReaderConstants.m; sourceTree = "<group>"; };
+		90014EEA1D3E7B3700E0283F /* ReaderContentTile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReaderContentTile.m; sourceTree = "<group>"; };
 		903043131D24268F0060290E /* test.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = test.pdf; sourceTree = "<group>"; };
 		903043151D2427030060290E /* SearchResults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchResults.h; sourceTree = "<group>"; };
 		903043161D2427030060290E /* SearchResults.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SearchResults.m; sourceTree = "<group>"; };
 		903043181D242CBC0060290E /* ResultsDrawView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ResultsDrawView.swift; sourceTree = "<group>"; };
+		9031ADBE1D265BC100CB04AE /* PDFFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDFFont.h; sourceTree = "<group>"; };
+		9031ADBF1D265BC100CB04AE /* PDFFont.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDFFont.m; sourceTree = "<group>"; };
 		90DA1DC11D1C48EB00519EE9 /* PDFKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PDFKit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		90DA1DC41D1C48EB00519EE9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		90DA1DC61D1C48EB00519EE9 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -81,6 +99,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		90014EEC1D3E7BEC00E0283F /* PDF Render */ = {
+			isa = PBXGroup;
+			children = (
+				90014EE01D3E7A9700E0283F /* ReaderConstants.h */,
+				90014EE81D3E7B2900E0283F /* ReaderConstants.m */,
+				90014EDA1D3E799D00E0283F /* ReaderContentView.h */,
+				90014EDB1D3E799D00E0283F /* ReaderContentView.m */,
+				90014EDD1D3E7A8200E0283F /* ReaderContentPage.h */,
+				90014EDE1D3E7A8200E0283F /* ReaderContentPage.m */,
+				90014EE11D3E7AAD00E0283F /* ReaderThumbView.h */,
+				90014EE21D3E7AAD00E0283F /* ReaderThumbView.m */,
+				90014EE51D3E7AEC00E0283F /* ReaderContentTile.h */,
+				90014EEA1D3E7B3700E0283F /* ReaderContentTile.m */,
+			);
+			name = "PDF Render";
+			sourceTree = "<group>";
+		};
 		90DA1DB81D1C48EB00519EE9 = {
 			isa = PBXGroup;
 			children = (
@@ -106,6 +141,7 @@
 			isa = PBXGroup;
 			children = (
 				90DA1DC41D1C48EB00519EE9 /* AppDelegate.swift */,
+				90014EEC1D3E7BEC00E0283F /* PDF Render */,
 				90DA1DE41D1C497900519EE9 /* ObjC */,
 				90DA1DF51D1C590E00519EE9 /* ToUnicodeMapper.swift */,
 				90DA1DC61D1C48EB00519EE9 /* ViewController.swift */,
@@ -130,6 +166,8 @@
 				90DA1DF41D1C531700519EE9 /* PDFKit.h */,
 				90DA1DE61D1C499800519EE9 /* PDFSearcher.h */,
 				90DA1DE71D1C499800519EE9 /* PDFSearcher.m */,
+				9031ADBE1D265BC100CB04AE /* PDFFont.h */,
+				9031ADBF1D265BC100CB04AE /* PDFFont.m */,
 				90DA1DEE1D1C4E7000519EE9 /* PDFDocument.h */,
 				90DA1DEF1D1C4E7000519EE9 /* PDFDocument.m */,
 				90DA1DF11D1C52F200519EE9 /* PDFPage.h */,
@@ -255,13 +293,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				90014EE91D3E7B2900E0283F /* ReaderConstants.m in Sources */,
 				90DA1DC71D1C48EB00519EE9 /* ViewController.swift in Sources */,
+				9031ADC01D265BC100CB04AE /* PDFFont.m in Sources */,
+				90014EEB1D3E7B3700E0283F /* ReaderContentTile.m in Sources */,
+				90014EE31D3E7AAD00E0283F /* ReaderThumbView.m in Sources */,
 				90DA1DF01D1C4E7000519EE9 /* PDFDocument.m in Sources */,
+				90014EDC1D3E799D00E0283F /* ReaderContentView.m in Sources */,
 				90DA1DE81D1C499800519EE9 /* PDFSearcher.m in Sources */,
 				903043191D242CBC0060290E /* ResultsDrawView.swift in Sources */,
 				903043171D2427030060290E /* SearchResults.m in Sources */,
 				90DA1DF31D1C52F200519EE9 /* PDFPage.m in Sources */,
 				90DA1DC51D1C48EB00519EE9 /* AppDelegate.swift in Sources */,
+				90014EDF1D3E7A8200E0283F /* ReaderContentPage.m in Sources */,
 				90DA1DF61D1C590E00519EE9 /* ToUnicodeMapper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

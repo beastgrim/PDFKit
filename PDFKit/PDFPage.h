@@ -16,6 +16,7 @@
 @property (nonatomic) NSUInteger location;
 @property (nonatomic, copy) NSString *fontName;
 @property (nonatomic) CGSize fontSize;
+@property (nonatomic) CGAffineTransform transform;
 
 @end
 
