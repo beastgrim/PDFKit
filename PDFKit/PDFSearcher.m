@@ -377,6 +377,10 @@ void arrayCallback(CGPDFScannerRef inScanner, void *userInfo)
             CGPDFStringRef string = getStringValue(pdfObject);
             [searcher.unicodeContent appendFormat:@"%@", [searcher stringWithPDFString:string]];
             
+            float width = 500 * (searcher->currentFontSize / 1000);
+            [searcher translateTextPosition:CGSizeMake(width, 0)];
+            [searcher saveTextPositionWithMatrix:searcher.renderingState.textMatrix];
+            
         } else {    // did scan space
 //            PDFFont *font = searcher.fontByFontName[searcher->currentFontName];
             
@@ -385,6 +389,7 @@ void arrayCallback(CGPDFScannerRef inScanner, void *userInfo)
             float width = val * (searcher->currentFontSize / 1000);
             
             [searcher translateTextPosition:CGSizeMake(-width, 0)];
+            [searcher saveTextPositionWithMatrix:searcher.renderingState.textMatrix];
 
             if (isSpace(val, searcher)) {
                 // separate string if needed

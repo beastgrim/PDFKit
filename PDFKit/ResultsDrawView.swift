@@ -27,20 +27,25 @@ class ResultsDrawView: UIView {
 
 //        let transform = CGAffineTransform(a: 1, b: 0, c: 0, d: 1, tx: 0, ty: 160)
 //        CGContextConcatCTM(ctx, transform)
+        CGContextSetLineWidth(ctx, 2)
         
         for res in searchResults {
             UIColor.redColor().set()
             
-            let x = res.textRect.origin.x*scale
-            let y = rect.height - res.textRect.origin.y*scale
-            let width = res.textRect.size.width
-            let height = res.textRect.size.height
-            CGContextFillRect(ctx, CGRectMake(x, y+height+2, width, 2))
+//            let x = res.textRect.origin.x*scale
+//            let y = rect.height - res.textRect.origin.y*scale + 155
+//            let width = res.textRect.size.width
+//            let height = res.textRect.size.height
+//            CGContextFillRect(ctx, CGRectMake(x, y+height+2, width, 2))
             
-            if let text = res.nextText {
-                drawAtttributes[NSFontAttributeName] = UIFont.systemFontOfSize(round(height))
-                (text as NSString).drawInRect(CGRectMake(x, y, 200, height+4), withAttributes: drawAtttributes)
-            }
+            var textRect = res.textRect
+            textRect.origin.y = pageSize.height - res.textRect.origin.y*scale - res.textRect.size.height + 3 // - font size + padding
+            CGContextStrokeRect(ctx, textRect)
+            
+//            if let text = res.nextText {
+//                drawAtttributes[NSFontAttributeName] = UIFont.systemFontOfSize(round(height))
+//                (text as NSString).drawInRect(CGRectMake(x, y, 200, height+4), withAttributes: drawAtttributes)
+//            }
         }
     }
 
