@@ -40,6 +40,7 @@ class ViewController: UIViewController {
         }
         
         let pdfPageView = document.viewForPageNumber(0)
+        drawResultsView.pageSize = pdfPageView.bounds.size;
         view.addSubview(pdfPageView)
         
         let results = document.searchText("кто", onPage: 0)

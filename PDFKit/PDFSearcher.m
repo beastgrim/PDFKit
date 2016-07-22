@@ -9,13 +9,13 @@
 #import "PDFSearcher.h"
 #import "PDFKit-Swift.h"
 #import "PDFFont.h"
+#import "RenderingState.h"
 
 
 void arrayCallback(CGPDFScannerRef inScanner, void *userInfo);
 void stringCallback(CGPDFScannerRef inScanner, void *userInfo);
 void fontInfoCallback(CGPDFScannerRef inScanner, void *userInfo);
 void endTextCallback(CGPDFScannerRef inScanner, void *userInfo);
-void startTextCallback(CGPDFScannerRef inScanner, void *userInfo);
 
 void textPositionCallback(CGPDFScannerRef inScanner, void *userInfo);
 void textMatrixCallback(CGPDFScannerRef inScanner, void *userInfo);
@@ -35,9 +35,9 @@ void printPDFObject(CGPDFObjectRef pdfObject);
 @property (nonatomic, retain) NSMutableSet <NSString*> *fontNames;
 @property (nonatomic, retain) NSMutableDictionary <NSString*, ToUnicodeMapper*> *mapperByFontName;
 @property (nonatomic, retain) NSMutableDictionary <NSString*, PDFFont*> *fontByFontName;
-@property (nonatomic, assign) CGAffineTransform textMatrix;
-@property (nonatomic, assign) CGAffineTransform lineMatrix;
 
+@property (nonatomic, readonly) RenderingState *renderingState;
+@property (nonatomic, retain) NSMutableArray <RenderingState*> *renderingStateStack;
 @end
 
 
@@ -62,18 +62,25 @@ void printPDFObject(CGPDFObjectRef pdfObject);
         _fontNames = [NSMutableSet new];
         _mapperByFontName = [NSMutableDictionary new];
         _fontByFontName = [NSMutableDictionary new];
-        _textMatrix = CGAffineTransformIdentity;
-        _lineMatrix = CGAffineTransformIdentity;
+        _renderingStateStack = [NSMutableArray new];
+        [_renderingStateStack addObject:[RenderingState new]];
         
         CGPDFOperatorTableSetCallback(table, "TJ", arrayCallback);      // when pdf print strings and spaces
         CGPDFOperatorTableSetCallback(table, "Tj", stringCallback);     // when pdf print strings
-        CGPDFOperatorTableSetCallback(table, "Td", textPositionCallback); // handle string position
-        CGPDFOperatorTableSetCallback(table, "TD", textPositionCallback); // handle string position
-        CGPDFOperatorTableSetCallback(table, "Tm", textMatrixCallback); // handle string position
-        CGPDFOperatorTableSetCallback(table, "T*", textPositionCallback); // handle string position
-        CGPDFOperatorTableSetCallback(table, "Tf", fontInfoCallback);   // handle switches to new font
+        // Text position
+        CGPDFOperatorTableSetCallback(table, "Tm", textMatrixCallback); // handle text position
+        CGPDFOperatorTableSetCallback(table, "Td", newLineWithLeading); // handle string position
+        CGPDFOperatorTableSetCallback(table, "TD", newLineSetLeading);  // handle string position
+        CGPDFOperatorTableSetCallback(table, "T*", newLine);            // handle string position
+        CGPDFOperatorTableSetCallback(table, "BT", newParagraph);       // PDF start print text
         CGPDFOperatorTableSetCallback(table, "ET", endTextCallback);    // PDF end print text
-        CGPDFOperatorTableSetCallback(table, "BT", startTextCallback);  // PDF start print text
+        // Font
+        CGPDFOperatorTableSetCallback(table, "Tf", fontInfoCallback);   // handle switches to new font
+        
+        // Graphics state operators
+        CGPDFOperatorTableSetCallback(table, "cm", applyTransformation);
+        CGPDFOperatorTableSetCallback(table, "q", pushRenderingState);
+        CGPDFOperatorTableSetCallback(table, "Q", popRenderingState);
     }
     return self;
 }
@@ -169,6 +176,26 @@ const char *kWidthsKey = "Widths";
 
 const char *kFontKey = "Font";
 const char *kBaseEncodingKey = "BaseEncoding";
+
+#pragma mark - Base
+- (void) saveTextPositionWithMatrix:(CGAffineTransform)transform {
+    CGPoint origin = CGPointMake(transform.tx, transform.ty);
+    NSInteger location = _unicodeContent.length;
+    TextPosition *lastPos = [positioningByLocation lastObject];
+
+    TextPosition *textPos = [TextPosition new];
+    textPos.location = location;
+    textPos.origin = origin;
+    textPos.fontName = currentFontName;
+    textPos.fontSize = CGSizeMake(currentFontSize*transform.a, currentFontSize*transform.d);
+    textPos.transform = transform;
+    
+    if (lastPos && lastPos.location == location) {  // replace last position
+        [positioningByLocation replaceObjectAtIndex:positioningByLocation.count-1 withObject:textPos];
+    } else {
+        [positioningByLocation addObject:textPos];
+    }
+}
 
 #pragma mark - Fonts
 void handleFontDictionary(const char *key, CGPDFObjectRef ob, void *info);
@@ -273,36 +300,44 @@ void didScanFont(const char *key, CGPDFObjectRef object, void *collection)
 #pragma mark - PDF protocol
 
 #pragma mark - Text Positioning
-void textPositionCallback(CGPDFScannerRef inScanner, void *userInfo) {
-//    PDFSearcher * searcher = (PDFSearcher *)userInfo;
-
-    CGPDFObjectRef obj;
+void newLine(CGPDFScannerRef inScanner, void *userInfo) {
+    PDFSearcher * searcher = (__bridge PDFSearcher *)userInfo;
     
-    while (CGPDFScannerPopObject(inScanner, &obj)) {
-        
-        CGPDFObjectType type = CGPDFObjectGetType(obj);
-        
-        if (type == kCGPDFObjectTypeReal) {
-            CGPDFReal floatVal;
-            CGPDFObjectGetValue(obj, kCGPDFObjectTypeReal, &floatVal);
-            
-        }
-    }
+    [searcher.renderingState newLine];
+    [searcher saveTextPositionWithMatrix:searcher.renderingState.textMatrix];
+}
+
+void newLineSetLeading(CGPDFScannerRef inScanner, void *userInfo) {
+    PDFSearcher * searcher = (__bridge PDFSearcher *)userInfo;
+    
+    CGPDFReal tx, ty;
+    CGPDFScannerPopNumber(inScanner, &ty);
+    CGPDFScannerPopNumber(inScanner, &tx);
+    [searcher.renderingState newLineWithLeading:-ty indent:tx save:YES];
+    [searcher saveTextPositionWithMatrix:searcher.renderingState.textMatrix];
+}
+
+void newLineWithLeading(CGPDFScannerRef inScanner, void *userInfo) {
+    PDFSearcher * searcher = (__bridge PDFSearcher *)userInfo;
+
+    CGPDFReal tx, ty;
+    CGPDFScannerPopNumber(inScanner, &ty);
+    CGPDFScannerPopNumber(inScanner, &tx);
+    [searcher.renderingState newLineWithLeading:-ty indent:tx save:NO];
+    [searcher saveTextPositionWithMatrix:searcher.renderingState.textMatrix];
+}
+
+void newParagraph(CGPDFScannerRef inScanner, void *userInfo) {
+    PDFSearcher * searcher = (__bridge PDFSearcher *)userInfo;
+    [searcher.renderingState setTextMatrix:CGAffineTransformIdentity replaceLineMatrix:YES];
+    [searcher saveTextPositionWithMatrix:searcher.renderingState.textMatrix];
 }
 
 void textMatrixCallback(CGPDFScannerRef inScanner, void *userInfo) {
     PDFSearcher * searcher = (__bridge PDFSearcher *)userInfo;
 
-    CGAffineTransform transform = getTransform(inScanner);
-    CGPoint origin = CGPointMake(transform.tx, transform.ty);
-        
-    TextPosition *textPos = [TextPosition new];
-    textPos.location = searcher.unicodeContent.length;
-    textPos.origin = origin;
-    textPos.fontName = searcher->currentFontName;
-    textPos.fontSize = CGSizeMake(searcher->currentFontSize*transform.a, searcher->currentFontSize*transform.d);
-    textPos.transform = transform;
-    [searcher->positioningByLocation addObject:textPos];
+    [searcher.renderingState setTextMatrix:getTransform(inScanner) replaceLineMatrix:YES];
+    [searcher saveTextPositionWithMatrix:searcher.renderingState.textMatrix];
 }
 
 #pragma mark Font info
@@ -321,11 +356,6 @@ void fontInfoCallback(CGPDFScannerRef inScanner, void *userInfo)
 }
 
 void endTextCallback(CGPDFScannerRef inScanner, void *userInfo) {
-//    PDFSearcher * searcher = (PDFSearcher *)userInfo;
-
-}
-
-void startTextCallback(CGPDFScannerRef inScanner, void *userInfo) {
 //    PDFSearcher * searcher = (PDFSearcher *)userInfo;
 
 }
@@ -375,21 +405,47 @@ void stringCallback(CGPDFScannerRef inScanner, void *userInfo)
 
 #pragma mark - Text Position Work
 - (void)setTextMatrix:(CGAffineTransform)matrix replaceLineMatrix:(BOOL)replace {
-    self.textMatrix = matrix;
+    self.renderingState.textMatrix = matrix;
     if (replace) {
-        self.lineMatrix = matrix;
+        self.renderingState.lineMatrix = matrix;
     }
 }
 - (void)translateTextPosition:(CGSize)size {
-    self.textMatrix = CGAffineTransformTranslate(self.textMatrix, size.width, size.height);
+    self.renderingState.textMatrix = CGAffineTransformTranslate(self.renderingState.textMatrix, size.width, size.height);
 }
+
+#pragma mark Graphics state operators
+- (RenderingState *)renderingState {
+    return [_renderingStateStack lastObject];
+}
+
+void pushRenderingState(CGPDFScannerRef pdfScanner, void *userInfo)
+{
+    PDFSearcher *searcher = (__bridge PDFSearcher *)userInfo;
+    RenderingState *state = [searcher.renderingState copy];
+    [searcher.renderingStateStack addObject:state];
+}
+
+void popRenderingState(CGPDFScannerRef pdfScanner, void *userInfo)
+{
+    PDFSearcher *searcher = (__bridge PDFSearcher *)userInfo;
+    [searcher.renderingStateStack removeLastObject];
+}
+/* Update CTM */
+void applyTransformation(CGPDFScannerRef pdfScanner, void *userInfo)
+{
+    PDFSearcher *searcher = (__bridge PDFSearcher *)userInfo;
+    
+    RenderingState *state = searcher.renderingState;
+    state.ctm = CGAffineTransformConcat(getTransform(pdfScanner), state.ctm);
+}
+
+#pragma mark - Helpers
 
 BOOL isSpace(float width, PDFSearcher *scanner) {
     PDFFont *font = scanner.fontByFontName[scanner->currentFontName];
     return fabs(width) >= font.spaceWidth;
 }
-
-#pragma mark - Helpers
 
 CGPDFObjectRef getObject(CGPDFArrayRef pdfArray, int index) {
     CGPDFObjectRef pdfObject;

@@ -12,6 +12,7 @@
 		90014EE31D3E7AAD00E0283F /* ReaderThumbView.m in Sources */ = {isa = PBXBuildFile; fileRef = 90014EE21D3E7AAD00E0283F /* ReaderThumbView.m */; };
 		90014EE91D3E7B2900E0283F /* ReaderConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 90014EE81D3E7B2900E0283F /* ReaderConstants.m */; };
 		90014EEB1D3E7B3700E0283F /* ReaderContentTile.m in Sources */ = {isa = PBXBuildFile; fileRef = 90014EEA1D3E7B3700E0283F /* ReaderContentTile.m */; };
+		9025EAFB1D3FCC78006CA315 /* RenderingState.m in Sources */ = {isa = PBXBuildFile; fileRef = 9025EAFA1D3FCC78006CA315 /* RenderingState.m */; };
 		903043141D24268F0060290E /* test.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 903043131D24268F0060290E /* test.pdf */; };
 		903043171D2427030060290E /* SearchResults.m in Sources */ = {isa = PBXBuildFile; fileRef = 903043161D2427030060290E /* SearchResults.m */; };
 		903043191D242CBC0060290E /* ResultsDrawView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 903043181D242CBC0060290E /* ResultsDrawView.swift */; };
@@ -51,6 +52,8 @@
 		90014EE51D3E7AEC00E0283F /* ReaderContentTile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReaderContentTile.h; sourceTree = "<group>"; };
 		90014EE81D3E7B2900E0283F /* ReaderConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReaderConstants.m; sourceTree = "<group>"; };
 		90014EEA1D3E7B3700E0283F /* ReaderContentTile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReaderContentTile.m; sourceTree = "<group>"; };
+		9025EAF91D3FCC78006CA315 /* RenderingState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RenderingState.h; sourceTree = "<group>"; };
+		9025EAFA1D3FCC78006CA315 /* RenderingState.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RenderingState.m; sourceTree = "<group>"; };
 		903043131D24268F0060290E /* test.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = test.pdf; sourceTree = "<group>"; };
 		903043151D2427030060290E /* SearchResults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchResults.h; sourceTree = "<group>"; };
 		903043161D2427030060290E /* SearchResults.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SearchResults.m; sourceTree = "<group>"; };
@@ -174,6 +177,8 @@
 				90DA1DF21D1C52F200519EE9 /* PDFPage.m */,
 				903043151D2427030060290E /* SearchResults.h */,
 				903043161D2427030060290E /* SearchResults.m */,
+				9025EAF91D3FCC78006CA315 /* RenderingState.h */,
+				9025EAFA1D3FCC78006CA315 /* RenderingState.m */,
 			);
 			name = ObjC;
 			sourceTree = "<group>";
@@ -300,6 +305,7 @@
 				90014EE31D3E7AAD00E0283F /* ReaderThumbView.m in Sources */,
 				90DA1DF01D1C4E7000519EE9 /* PDFDocument.m in Sources */,
 				90014EDC1D3E799D00E0283F /* ReaderContentView.m in Sources */,
+				9025EAFB1D3FCC78006CA315 /* RenderingState.m in Sources */,
 				90DA1DE81D1C499800519EE9 /* PDFSearcher.m in Sources */,
 				903043191D242CBC0060290E /* ResultsDrawView.swift in Sources */,
 				903043171D2427030060290E /* SearchResults.m in Sources */,

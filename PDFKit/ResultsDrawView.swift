@@ -15,17 +15,18 @@ class ResultsDrawView: UIView {
             setNeedsDisplay()
         }
     }
+    var pageSize: CGSize = CGSizeZero
+    var scale: CGFloat = 1
     
-    private var drawAtttributes = [NSFontAttributeName: UIFont.systemFontOfSize(12), NSBackgroundColorAttributeName: UIColor.yellowColor().colorWithAlphaComponent(0.5), NSForegroundColorAttributeName: UIColor.redColor().colorWithAlphaComponent(0.5)]
+
+    private var drawAtttributes = [NSFontAttributeName: UIFont.systemFontOfSize(12), NSBackgroundColorAttributeName: UIColor.yellowColor().colorWithAlphaComponent(0.9), NSForegroundColorAttributeName: UIColor.blackColor().colorWithAlphaComponent(0.5)]
     
 
     override func drawRect(rect: CGRect) {
         let ctx = UIGraphicsGetCurrentContext()
 
-        let transform = CGAffineTransform(a: 1, b: 0, c: 0, d: 1, tx: 0, ty: 160)
-        CGContextConcatCTM(ctx, transform)
-        let scale: CGFloat = 1;
-        
+//        let transform = CGAffineTransform(a: 1, b: 0, c: 0, d: 1, tx: 0, ty: 160)
+//        CGContextConcatCTM(ctx, transform)
         
         for res in searchResults {
             UIColor.redColor().set()
