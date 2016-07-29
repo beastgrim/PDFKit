@@ -18,4 +18,7 @@
 - (instancetype) initWithName:(NSString *)name fontDict:(CGPDFDictionaryRef)fontDict;
 - (instancetype) initWithName:(NSString *)name defaultWidth:(CGFloat)defWidth widths:(NSMutableDictionary*)widths;
 
+
+- (NSString *)stringWithPDFString:(CGPDFStringRef)pdfString;
+
 @end

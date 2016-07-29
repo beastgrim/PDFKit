@@ -87,7 +87,7 @@
         CGSize size = cropBoxRect.size;
         
         CGRect contentRect = {CGPointZero, size};
-        ReaderContentView * contentView = [[ReaderContentView alloc] initWithFrame:contentRect PDFDocRef:documentRef fileURL:nil page:0 superviewWidth:[UIScreen mainScreen].bounds.size.width];
+        ReaderContentView * contentView = [[ReaderContentView alloc] initWithFrame:contentRect PDFDocRef:documentRef fileURL:nil page:pageNumber+1 superviewWidth:[UIScreen mainScreen].bounds.size.width];
         return contentView;
     }
     return nil;

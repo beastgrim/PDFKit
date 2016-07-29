@@ -26,7 +26,6 @@ CGPDFObjectRef getObject(CGPDFArrayRef pdfArray, int index);
 CGPDFStringRef getStringValue(CGPDFObjectRef pdfObject);
 float getNumericalValue(CGPDFObjectRef pdfObject, CGPDFObjectType type);
 
-void didScanFont(const char *key, CGPDFObjectRef object, void *collection);
 void printPDFObject(CGPDFObjectRef pdfObject);
 
 @interface PDFSearcher ()
@@ -124,58 +123,16 @@ void printPDFObject(CGPDFObjectRef pdfObject);
              rangeOfString:[inSearchString uppercaseString]].location != NSNotFound);
 }
 
-- (NSString *)stringWithPDFString:(CGPDFStringRef)pdfString
-{
-    if (currentFontName == nil) return (NSString *)CFBridgingRelease(CGPDFStringCopyTextString(pdfString));
-    
-    ToUnicodeMapper *mapper = _mapperByFontName[currentFontName];
-    
-    if (mapper) {
-        // Character codes
-        const unsigned char * characterCodes = CGPDFStringGetBytePtr(pdfString);
-        int count = CGPDFStringGetLength(pdfString);
-        NSMutableString *string = [NSMutableString string];
-        uint16_t code2 = characterCodes[1] + (characterCodes[0] << 8);  // 16 byte code
-        
-        for (int i = 0; i < count; i++) {
-            
-            char code = characterCodes[i];
 
-            NSString *letter = mapper.map[@(code)];
-            if (letter) {
-                [string appendFormat:@"%@", letter];
-            } else {
-                NSString *letter = mapper.map[@(code2)];
-                return letter;
-            }
-
-//            NSLog(@"Map charCode %d to letter %@", code, letter);
-//            void *gid = malloc(2);
-//            NSData *charData = [CIDToUnicodeData subdataWithRange:NSMakeRange(code * 2, 2)];
-//            [CIDToUnicodeData getBytes:gid range:NSMakeRange(code * 2, 2)];
-//            NSLog(@"Char code %d charData %@", code, charData);
-//            unichar value = (unichar)gid;
-//            [string appendFormat:@"%C", value];
-        }
-        
-        return string;
-    }
-    
-    return (NSString *)CFBridgingRelease(CGPDFStringCopyTextString(pdfString));
-}
 
 const char *kTypeKey = "Type";
 const char *kFontSubtypeKey = "Subtype";
 const char *kBaseFontKey = "BaseFont";
-const char *kFontDescriptorKey = "FontDescriptor";
-const char *kEncodingKey = "Encoding";
-const char *kToUnicodeKey = "ToUnicode";
 const char *kFirstCharKey = "FirstChar";
 const char *kLastCharKey = "LastChar";
 const char *kWidthsKey = "Widths";
 
 const char *kFontKey = "Font";
-const char *kBaseEncodingKey = "BaseEncoding";
 
 #pragma mark - Base
 - (void) saveTextPositionWithMatrix:(CGAffineTransform)transform {
@@ -195,6 +152,10 @@ const char *kBaseEncodingKey = "BaseEncoding";
     } else {
         [positioningByLocation addObject:textPos];
     }
+}
+
+- (PDFFont*)currentFont {
+    return _fontByFontName[currentFontName];
 }
 
 #pragma mark - Fonts
@@ -234,8 +195,10 @@ void handleFontDictionary(const char *key, CGPDFObjectRef ob, void *info) {
     if (CGPDFObjectGetType(ob) != kCGPDFObjectTypeDictionary) return;
     
     CGPDFDictionaryRef fontDict;
-    if (CGPDFObjectGetValue(ob, kCGPDFObjectTypeDictionary, &fontDict)) {
-        //        CGPDFDictionaryApplyFunction(fontDict, didScanFont, info);
+    if (!CGPDFObjectGetValue(ob, kCGPDFObjectTypeDictionary, &fontDict)) {
+        
+        NSLog(@"ERROR GET FONT DICT");
+        return;
     }
     
     NSLog(@"PRINT FONT: %s", key);
@@ -244,58 +207,8 @@ void handleFontDictionary(const char *key, CGPDFObjectRef ob, void *info) {
     NSString *fontName = [NSString stringWithFormat:@"%s", key];
     PDFFont *font = [[PDFFont alloc] initWithName:fontName fontDict:fontDict];
     searcher.fontByFontName[fontName] = font;
-    
-    CGPDFObjectRef toUnicodeObj;
-    if (!CGPDFDictionaryGetObject(fontDict, kToUnicodeKey, &toUnicodeObj)) return;
-    
-    CGPDFStreamRef toUnicodeStream;
-    if (!CGPDFObjectGetValue(toUnicodeObj, kCGPDFObjectTypeStream, &toUnicodeStream)) return;
-    
-    CFDataRef dataRef = CGPDFStreamCopyData(toUnicodeStream, NULL);
-    NSData *data = (__bridge NSData*)dataRef;
-    ToUnicodeMapper *mapper = [[ToUnicodeMapper alloc] initWithData:data];
-    
-    if (mapper) {
-        NSLog(@"\n\nDID HANDLE FONT: [%s]\n\nMapData: %@\nMAP: %@", key, [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding], mapper.map);
-        searcher.mapperByFontName[fontName] = mapper;
-    }
 }
 
-/* Applier function for font dictionaries */
-void didScanFont(const char *key, CGPDFObjectRef object, void *collection)
-{
-    if (CGPDFObjectGetType(object) != kCGPDFObjectTypeDictionary) return;
-    CGPDFDictionaryRef fontDict;
-    if (!CGPDFObjectGetValue(object, kCGPDFObjectTypeDictionary, &fontDict)) return;
-    
-    printf("Font: %s\n", key);
-    CGPDFDictionaryApplyFunction(fontDict, printPDFKeys, nil);
-    
-    const char *type = nil;
-    CGPDFDictionaryGetName(fontDict, kTypeKey, &type);
-    if (!type || strcmp(type, kFontKey) != 0) return;
-    const char *subtype = nil;
-    CGPDFDictionaryGetName(fontDict, kFontSubtypeKey, &subtype);
-    const char *toUnicode = nil;
-    CGPDFDictionaryGetName(fontDict, kToUnicodeKey, &subtype);
-
-    const char *encodingName = nil;
-    if (!CGPDFDictionaryGetName(fontDict, kEncodingKey, &encodingName))
-    {
-        CGPDFDictionaryRef encodingDict = nil;
-        CGPDFDictionaryGetDictionary(fontDict, kEncodingKey, &encodingDict);
-        printf("ENCODING INFO KEYS:\n");
-        CGPDFDictionaryApplyFunction(encodingDict, printPDFKeys, nil);
-        
-        printf("Encoding Name: %s\n", encodingName);
-        printf("Type: %s\n", type);
-        printf("Subtype: %s\n", subtype);
-        printf("ToUnicode: %s\n", toUnicode);
-
-        // TODO: Also get differences from font encoding dictionary
-    }
-    
-}
 
 #pragma mark - PDF protocol
 
@@ -350,7 +263,9 @@ void fontInfoCallback(CGPDFScannerRef inScanner, void *userInfo)
     const char *fontName;
     CGPDFScannerPopNumber(inScanner, &fontSize);
     CGPDFScannerPopName(inScanner, &fontName);
-    NSLog(@"Font size %f", fontSize);
+//    NSLog(@"Font size %f", fontSize);
+    
+    [searcher.unicodeContent appendFormat:@"[%s]", fontName];
     searcher->currentFontName = [NSString stringWithFormat:@"%s", fontName];
     searcher->currentFontSize = fontSize;
 }
@@ -374,8 +289,10 @@ void arrayCallback(CGPDFScannerRef inScanner, void *userInfo)
         
         if (valueType == kCGPDFObjectTypeString) {  // did scan string
             
+            PDFFont *font = [searcher currentFont];
+            
             CGPDFStringRef string = getStringValue(pdfObject);
-            [searcher.unicodeContent appendFormat:@"%@", [searcher stringWithPDFString:string]];
+            [searcher.unicodeContent appendFormat:@"%@", [font stringWithPDFString:string]];
             
             float width = 500 * (searcher->currentFontSize / 1000);
             [searcher translateTextPosition:CGSizeMake(width, 0)];
@@ -394,7 +311,7 @@ void arrayCallback(CGPDFScannerRef inScanner, void *userInfo)
             if (isSpace(val, searcher)) {
                 // separate string if needed
             }
-            NSLog(@"Width %f, convert %f", val, width);
+//            NSLog(@"Width %f, convert %f", val, width);
         }
     }
 }
@@ -404,7 +321,7 @@ void stringCallback(CGPDFScannerRef inScanner, void *userInfo)
     PDFSearcher *searcher = (__bridge PDFSearcher *)userInfo;
     
     CGPDFStringRef string = getString(inScanner);
-    [searcher.unicodeContent appendFormat:@"%@", [searcher stringWithPDFString:string]];
+    [searcher.unicodeContent appendFormat:@"%@", [[searcher currentFont] stringWithPDFString:string]];
 }
 
 
@@ -598,7 +515,7 @@ CGAffineTransform getTransform(CGPDFScannerRef pdfScanner) {
     transform.c = popNumber(pdfScanner);
     transform.b = popNumber(pdfScanner);
     transform.a = popNumber(pdfScanner);
-    NSLog(@"Transform x:%f y:%f a:%f b:%f c:%f d:%f", transform.ty, transform.tx, transform.a, transform.b, transform.c, transform.d);
+//    NSLog(@"Transform x:%f y:%f a:%f b:%f c:%f d:%f", transform.ty, transform.tx, transform.a, transform.b, transform.c, transform.d);
     return transform;
 }
 

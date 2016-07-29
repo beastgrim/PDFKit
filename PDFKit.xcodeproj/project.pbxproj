@@ -17,6 +17,7 @@
 		903043171D2427030060290E /* SearchResults.m in Sources */ = {isa = PBXBuildFile; fileRef = 903043161D2427030060290E /* SearchResults.m */; };
 		903043191D242CBC0060290E /* ResultsDrawView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 903043181D242CBC0060290E /* ResultsDrawView.swift */; };
 		9031ADC01D265BC100CB04AE /* PDFFont.m in Sources */ = {isa = PBXBuildFile; fileRef = 9031ADBF1D265BC100CB04AE /* PDFFont.m */; };
+		904CE53C1D4A5D1B0097ACA2 /* unsearch.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 904CE53B1D4A5D1B0097ACA2 /* unsearch.pdf */; };
 		90DA1DC51D1C48EB00519EE9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DA1DC41D1C48EB00519EE9 /* AppDelegate.swift */; };
 		90DA1DC71D1C48EB00519EE9 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DA1DC61D1C48EB00519EE9 /* ViewController.swift */; };
 		90DA1DCA1D1C48EB00519EE9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 90DA1DC81D1C48EB00519EE9 /* Main.storyboard */; };
@@ -60,6 +61,7 @@
 		903043181D242CBC0060290E /* ResultsDrawView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ResultsDrawView.swift; sourceTree = "<group>"; };
 		9031ADBE1D265BC100CB04AE /* PDFFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDFFont.h; sourceTree = "<group>"; };
 		9031ADBF1D265BC100CB04AE /* PDFFont.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDFFont.m; sourceTree = "<group>"; };
+		904CE53B1D4A5D1B0097ACA2 /* unsearch.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = unsearch.pdf; sourceTree = "<group>"; };
 		90DA1DC11D1C48EB00519EE9 /* PDFKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PDFKit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		90DA1DC41D1C48EB00519EE9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		90DA1DC61D1C48EB00519EE9 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -125,6 +127,7 @@
 				90DA1DEC1D1C4A8900519EE9 /* CoreGraphics.framework */,
 				90DA1DEA1D1C49F600519EE9 /* test_simple.pdf */,
 				903043131D24268F0060290E /* test.pdf */,
+				904CE53B1D4A5D1B0097ACA2 /* unsearch.pdf */,
 				90DA1DC31D1C48EB00519EE9 /* PDFKit */,
 				90DA1DD81D1C48EB00519EE9 /* PDFKitTests */,
 				90DA1DC21D1C48EB00519EE9 /* Products */,
@@ -280,6 +283,7 @@
 				90DA1DCF1D1C48EB00519EE9 /* LaunchScreen.storyboard in Resources */,
 				90DA1DCC1D1C48EB00519EE9 /* Assets.xcassets in Resources */,
 				90DA1DCA1D1C48EB00519EE9 /* Main.storyboard in Resources */,
+				904CE53C1D4A5D1B0097ACA2 /* unsearch.pdf in Resources */,
 				903043141D24268F0060290E /* test.pdf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

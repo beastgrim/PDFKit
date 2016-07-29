@@ -29,7 +29,7 @@ class ViewController: UIViewController {
 
     
     private func openTestPDF() {
-        guard let pdfPath = NSBundle.mainBundle().pathForResource("test", ofType: "pdf") else {
+        guard let pdfPath = NSBundle.mainBundle().pathForResource("unsearch", ofType: "pdf") else {
             return
         }
         guard let pdfData = NSData(contentsOfFile: pdfPath) else {
@@ -39,11 +39,14 @@ class ViewController: UIViewController {
             return
         }
         
-        let pdfPageView = document.viewForPageNumber(0)
-        drawResultsView.pageSize = pdfPageView.bounds.size;
-        view.addSubview(pdfPageView)
+        let pageIndex = 1
         
-        let results = document.searchText("кто", onPage: 0)
+        if let pdfPageView = document.viewForPageNumber(pageIndex) {
+            drawResultsView.pageSize = pdfPageView.bounds.size;
+            view.addSubview(pdfPageView)
+        }
+        
+        let results = document.searchText("на", onPage: UInt(pageIndex))
         
         view.bringSubviewToFront(drawResultsView)
         drawResultsView.searchResults = results

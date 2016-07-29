@@ -18,6 +18,6 @@
 - (NSArray <SearchResults*> * __nonnull) searchText:(NSString * __nonnull)text;
 - (NSArray <SearchResults*> * __nonnull) searchText:(NSString * __nonnull)text onPage:(NSUInteger)pageNumber;
 
-- (ReaderContentView*) viewForPageNumber:(NSInteger)pageNumber;
+- (ReaderContentView* __nullable) viewForPageNumber:(NSInteger)pageNumber;
 
 @end
