@@ -101,7 +101,8 @@ void printPDFObject(CGPDFObjectRef pdfObject);
     CGPDFScannerRelease(scanner);
     CGPDFContentStreamRelease(contentStream);
     
-    return [[PDFPage alloc] initWithContent:_unicodeContent textPositions:positioningByLocation];
+    CGRect cropBoxRect = CGPDFPageGetBoxRect(inPage, kCGPDFCropBox);
+    return [[PDFPage alloc] initWithSize:cropBoxRect.size content:_unicodeContent textPositions:positioningByLocation];
 }
 
 -(BOOL)page:(CGPDFPageRef)inPage containsString:(NSString *)inSearchString;

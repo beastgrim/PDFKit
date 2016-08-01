@@ -25,8 +25,9 @@
 
 @property (nonatomic, readonly) NSString *unicodeContent;
 @property (nonatomic, readonly) NSArray <TextPosition*> * positionsByLocation;
+@property (nonatomic, readonly) CGSize pageSize;
 
-- (instancetype) initWithContent:(NSString*)content textPositions:(NSArray <TextPosition*>*)positionsByLocation;
+- (instancetype) initWithSize:(CGSize)pageSize content:(NSString*)content textPositions:(NSArray <TextPosition*>*)positionsByLocation;
 
 - (CGRect) rectForTextRange:(NSRange)range;
 @end

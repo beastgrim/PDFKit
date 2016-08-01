@@ -20,9 +20,10 @@
 @implementation PDFPage
 
 
-- (instancetype)initWithContent:(NSString *)content textPositions:(NSArray <TextPosition*>*)positionsByLocation {
+- (instancetype)initWithSize:(CGSize)pageSize content:(NSString *)content textPositions:(NSArray<TextPosition *> *)positionsByLocation {
     self = [super init];
     if (self) {
+        _pageSize = pageSize;
         _unicodeContent = content;
         _positionsByLocation = positionsByLocation;
     }
@@ -48,7 +49,7 @@
         
     CGFloat offsetX = (range.location - tp.location)*tp.fontSize.width;
     CGFloat width = tp.fontSize.width*range.length;
-    return CGRectMake(tp.origin.x + offsetX, tp.origin.y, width, tp.fontSize.height);
+    return CGRectMake(tp.origin.x + offsetX, _pageSize.height - tp.origin.y, width, tp.fontSize.height);
 }
 
 - (NSString *)description {

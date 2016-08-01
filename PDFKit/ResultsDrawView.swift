@@ -39,7 +39,7 @@ class ResultsDrawView: UIView {
 //            CGContextFillRect(ctx, CGRectMake(x, y+height+2, width, 2))
             
             var textRect = res.textRect
-            textRect.origin.y = pageSize.height - res.textRect.origin.y*scale - res.textRect.size.height + 3 // - font size + padding
+            textRect.origin.y = res.textRect.origin.y*scale - res.textRect.size.height + 3 // - font size + padding
             CGContextStrokeRect(ctx, textRect)
             
 //            if let text = res.nextText {
