@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "SearchResults.h"
 #import "ReaderContentView.h"
+#import "PDFFont.h"
 
 @interface PDFDocument : NSObject
 
@@ -19,5 +20,7 @@
 - (NSArray <SearchResults*> * __nonnull) searchText:(NSString * __nonnull)text onPage:(NSUInteger)pageNumber;
 
 - (ReaderContentView* __nullable) viewForPageNumber:(NSInteger)pageNumber;
+
+- (NSArray<PDFFont*>*) getFontsForPageNumber:(NSInteger)pageNumber;
 
 @end

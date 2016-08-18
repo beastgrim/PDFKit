@@ -29,6 +29,7 @@ class ViewController: UIViewController {
 
     
     private func openTestPDF() {
+//        guard let pdfPath = NSBundle.mainBundle().pathForResource("Untitled", ofType: "pdf") else {
         guard let pdfPath = NSBundle.mainBundle().pathForResource("unsearch", ofType: "pdf") else {
             return
         }
@@ -45,11 +46,19 @@ class ViewController: UIViewController {
             drawResultsView.pageSize = pdfPageView.bounds.size;
             view.addSubview(pdfPageView)
         }
-        
+        let fonts = document.getFontsForPageNumber(pageIndex)
+        for font in fonts {
+            
+            drawResultsView.fonts.append(font.bBoxRect)
+        }
+
         let results = document.searchText("на", onPage: UInt(pageIndex))
         
         view.bringSubviewToFront(drawResultsView)
+        drawResultsView.layer.borderWidth = 2
+        drawResultsView.layer.borderColor = UIColor.blueColor().CGColor
         drawResultsView.searchResults = results
+        
         
         print("Success open PDF, number pages is \(document.numberOfPages). Results: \(results)")
     }

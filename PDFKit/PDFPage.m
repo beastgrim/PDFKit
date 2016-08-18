@@ -54,6 +54,13 @@
 
 - (NSString *)description {
 //    NSLog(@"UTF CONTENT:\n%@\nPOS MAP:\n%@", _unicodeContent, _positionsByLocation);
-    return [NSString stringWithFormat:@"UTF CONTENT:\n%@\nPOS MAP:\n%@", _unicodeContent, _positionsByLocation];
+    NSMutableString *map = [NSMutableString new];
+    for (TextPosition *pos in _positionsByLocation) {
+        NSInteger len = MAX(0, MIN(8, _unicodeContent.length - pos.location));
+        NSRange range = NSMakeRange(pos.location, len);
+        NSString *text = [_unicodeContent substringWithRange:range];
+        [map appendFormat:@"\t%@ Text: %@\n", pos, text];
+    }
+    return [NSString stringWithFormat:@"UTF CONTENT:\n%@\nPOS MAP:\n%@", _unicodeContent, map];
 }
 @end

@@ -93,4 +93,12 @@
     return nil;
 }
 
+- (NSArray<PDFFont *> *)getFontsForPageNumber:(NSInteger)pageNumber {
+    CGPDFPageRef page = [self pageWithIndex:pageNumber];
+    PDFSearcher *searh = [PDFSearcher new];
+    PDFPage * pageInfo = [searh pageInfoForPDFPage:page];
+
+    return pageInfo.fonts;
+}
+
 @end

@@ -15,6 +15,17 @@ const char *kToUnicodeKey = "ToUnicode";
 const char *kDifferencesKey = "Differences";
 const char *kFontDescriptorKey = "FontDescriptor";
 const char *kCharSetKey = "CharSet";
+const char *kSubtype = "Subtype";
+
+
+const char *kXHeight = "XHeight"; // (Optional) The font’s x height: the vertical coordinate of the top of flat non- ascending lowercase letters (like the letter x), measured from the baseline. Default value: 0.
+const char *kFontBBox = "FontBBox"; // (Required) A rectangle (see Section 3.8.3, “Rectangles”), expressed in the glyph coordinate system, specifying the font bounding box. This is the small- est rectangle enclosing the shape that would result if all of the glyphs of the font were placed with their origins coincident and then filled.
+const char *kLeading = "Leading"; // (Optional) The desired spacing between baselines of consecutive lines of text. Default value: 0.
+const char *kCapHeight = "CapHeight"; // (Required) The vertical coordinate of the top of flat capital letters, measured from the baseline.
+const char *kMaxWidth = "MaxWidth"; // (Optional) The maximum width of glyphs in the font. Default value: 0.
+const char *kWidths = "Widths"; // (Required except for the standard 14 fonts; indirect reference preferred) An array of (LastChar − FirstChar + 1) widths, each element being the glyph width for the character whose code is FirstChar plus the array index. For character codes outside the range FirstChar to LastChar, the value of MissingWidth from the FontDescriptor entry for this font is used. The glyph widths are measured in units in which 1000 units corresponds to 1 unit in text space. These widths must be consistent with the actual widths given in the font program itself. (See implementation note 43 in Appendix H.) For more information on glyph widths and other glyph metrics, see Section 5.1.3, “Glyph Positioning and Metrics.”
+const char *kFirstChar = "FirstChar"; // (Required except for the standard 14 fonts) The first character code defined in the font’s Widths array.
+const char *kLastChar = "LastChar"; // (Required except for the standard 14 fonts) The last character code defined in the font’s Widths array.
 
 
 typedef enum {
@@ -44,11 +55,22 @@ typedef enum {
 
 
 - (instancetype)initWithName:(NSString *)name fontDict:(CGPDFDictionaryRef)fontDict {
+    
     if (self = [super init]) {
         _name = name;
         widths = [NSMutableDictionary new];
         defaultWidth = 1000;
         
+        const char *subtype;
+        if (CGPDFDictionaryGetName(fontDict, kSubtype, &subtype)) {
+            if (strcmp(subtype, "Type1") == 0) {
+                _type = PDFFontType1;
+            } else if (strcmp(subtype, "Type2") == 0) {
+                _type = PDFFontType2;
+            } else if (strcmp(subtype, "Type3") == 0) {
+                _type = PDFFontType3;
+            }
+        }
         
         // try get toUnicode map
         CGPDFObjectRef toUnicodeObj;
@@ -113,24 +135,72 @@ typedef enum {
 
         }
         
-//        CGPDFDictionaryRef fontDecriptor;
-//        if (CGPDFDictionaryGetDictionary(fontDict, kFontDescriptorKey, &fontDecriptor)) {
-//            
-//            
-//            CGPDFStringRef charSet;
-//            if (CGPDFDictionaryGetString(fontDecriptor, kCharSetKey, &charSet)) {
-//                
-//                NSString *data = CFBridgingRelease(CGPDFStringCopyTextString(charSet));
-//                if (data.length) { data = [data substringFromIndex:1];  }
-//                NSLog(@"CharSet %@", data);
-//                _charSet = [data componentsSeparatedByString:@"/"];
-//            }
-//        }
+        CGPDFDictionaryRef fontDecriptor;
+        if (CGPDFDictionaryGetDictionary(fontDict, kFontDescriptorKey, &fontDecriptor)) {
+            
+            CGPDFReal XHeight;
+            if (CGPDFDictionaryGetNumber(fontDecriptor, kXHeight, &XHeight)) {
+                NSLog(@"XHeight %f", XHeight);
+            }
+            CGPDFReal Leading;
+            if (CGPDFDictionaryGetNumber(fontDecriptor, kLeading, &Leading)) {
+                NSLog(@"Leading %f", Leading);
+            }
+            CGPDFReal CapHeight;
+            if (CGPDFDictionaryGetNumber(fontDecriptor, kCapHeight, &CapHeight)) {
+                NSLog(@"CapHeight %f", CapHeight);
+            }
+            CGPDFArrayRef FontBBox;
+            if (CGPDFDictionaryGetArray(fontDecriptor, kFontBBox, &FontBBox)) {
+                size_t count = CGPDFArrayGetCount(FontBBox);
+                NSLog(@"FontBBox %zu", count);
+                _fontBBox.size = count;
+                _fontBBox.values = malloc(sizeof(CGPDFInteger)*count);
+                for (size_t i = 0; i < count; i++) {
+                    CGPDFInteger val;
+                    CGPDFArrayGetInteger(FontBBox, i, &val);
+                    _fontBBox.values[i] = val;
+                }
+            }
+
+            /*
+            CGPDFStringRef charSet;
+            if (CGPDFDictionaryGetString(fontDecriptor, kCharSetKey, &charSet)) {
+                
+                NSString *data = CFBridgingRelease(CGPDFStringCopyTextString(charSet));
+                if (data.length) { data = [data substringFromIndex:1];  }
+                NSLog(@"CharSet %@", data);
+                _charSet = [data componentsSeparatedByString:@"/"];
+            } */
+        }
+        
+        CGPDFInteger FirstChar;
+        if (CGPDFDictionaryGetInteger(fontDict, kFirstChar, &FirstChar)) {
+            NSLog(@"FirstChar %ld", FirstChar);
+            _firstChar = FirstChar;
+        }
+        CGPDFInteger LastChar;
+        if (CGPDFDictionaryGetInteger(fontDict, kLastChar, &LastChar)) {
+            NSLog(@"LastChar %ld", LastChar);
+            _lastChar = LastChar;
+        }
         
         
+        CGPDFArrayRef Widths;
+        if (CGPDFDictionaryGetArray(fontDict, kWidths, &Widths)) {
+            size_t count = CGPDFArrayGetCount(Widths);
+            NSLog(@"Widths %zu", count);
+            _widths.size = count;
+            _widths.values = malloc(sizeof(CGPDFInteger)*count);
+            for (size_t i = 0; i < count; i++) {
+                CGPDFInteger val;
+                CGPDFArrayGetInteger(Widths, i, &val);
+                _widths.values[i] = val;
+            }
+        }
         
         CGPDFArrayRef widthsArray;
-        if (CGPDFDictionaryGetArray(fontDict, "W", &widthsArray)) {
+        if (CGPDFDictionaryGetArray(fontDict, kWidths, &widthsArray)) {
             NSUInteger length = CGPDFArrayGetCount(widthsArray);
             int idx = 0;
             CGPDFObjectRef nextObject = nil;
@@ -186,10 +256,10 @@ typedef enum {
             }
         }
         
-        CGPDFInteger defaultWidthValue;
-        if (CGPDFDictionaryGetInteger(fontDict, "DW", &defaultWidthValue)) {
-            defaultWidth = defaultWidthValue;
-        }
+//        CGPDFInteger defaultWidthValue;
+//        if (CGPDFDictionaryGetInteger(fontDict, "DW", &defaultWidthValue)) {
+//            defaultWidth = defaultWidthValue;
+//        }
     }
     return self;
 }
@@ -203,7 +273,26 @@ typedef enum {
     return self;
 }
 
+- (void)dealloc {
+    if (_fontBBox.size > 0 && _fontBBox.values != nil) {
+        free(_fontBBox.values);
+        _fontBBox.values = nil;
+        _fontBBox.size = 0;
+    }
+    if (_widths.size > 0 && _widths.values != nil) {
+        free(_widths.values);
+        _widths.values = nil;
+        _widths.size = 0;
+    }
+}
+
 #pragma mark - Base
+
+- (void)setWidthsFrom:(CGPDFInteger)cid to:(CGPDFInteger)maxCid width:(CGPDFInteger)width {
+    while (cid <= maxCid) {
+        [widths setObject:[NSNumber numberWithInt:(int)width] forKey:[NSNumber numberWithInt:(int)cid++]];
+    }
+}
 
 #pragma mark Encoding
 - (void)setEncodingNamed:(NSString *)encodingName {
@@ -220,6 +309,34 @@ typedef enum {
 }
 
 #pragma mark - Public
+- (CGPDFInteger)widthOfChar:(CGPDFInteger)charCode {
+    if (_widths.size > charCode) {
+        return _widths.values[charCode];
+    }
+    NSLog(@"widthOfChar %ld not found!", charCode);
+    return defaultWidth;
+}
+- (CGPDFInteger)widthOfPDFString:(CGPDFStringRef)pdfString {
+    const unsigned char * characterCodes = CGPDFStringGetBytePtr(pdfString);
+    int count = CGPDFStringGetLength(pdfString);
+    CGPDFInteger result = 0;
+    size_t countCodes = _widths.size;
+    for (int i = 0; i < count; i++) {
+        char code = characterCodes[i];
+        size_t charIndex = code - _firstChar;
+        if (countCodes > charIndex) {
+            CGPDFInteger val = _widths.values[code];
+            result += val;
+            
+//            NSNumber *w = widths[[NSNumber numberWithInt:(int)code]];
+            NSLog(@"Find width of char %d: %ld", code, val);
+        } else {
+            NSLog(@"Error get char width index: %zu, charCode %d widthLength %zu", charIndex, code, countCodes);
+        }
+    }
+    return result ?: 500;
+}
+
 - (NSString *)stringWithPDFString:(CGPDFStringRef)pdfString {
     
     if (_mapper) {
@@ -278,13 +395,24 @@ typedef enum {
     return (NSString *)CFBridgingRelease(CGPDFStringCopyTextString(pdfString));
 }
 
+- (CGRect)bBoxRect {
+    if (_fontBBox.size == 4) {
+        CGFloat lowerLeftX = _fontBBox.values[0];
+        CGFloat lowerLeftY = _fontBBox.values[1];
+        CGFloat upperRightX = _fontBBox.values[2];
+        CGFloat upperRightY = _fontBBox.values[3];
+        CGFloat width = upperRightX - lowerLeftX;
+        CGFloat height = upperRightY - lowerLeftY;
+        CGFloat x = lowerLeftX;
+        CGFloat y = upperRightY;
+        
+        return CGRectMake(x, y, width, height);
+    }
+    return CGRectZero;
+}
+
 #pragma mark - Helpers
 
-- (void)setWidthsFrom:(CGPDFInteger)cid to:(CGPDFInteger)maxCid width:(CGPDFInteger)width {
-    while (cid <= maxCid) {
-        [widths setObject:[NSNumber numberWithInt:(int)width] forKey:[NSNumber numberWithInt:(int)cid++]];
-    }
-}
 - (void)setWidthsWithBase:(CGPDFInteger)base array:(CGPDFArrayRef)array {
     NSInteger count = CGPDFArrayGetCount(array);
     CGPDFInteger width;
@@ -294,6 +422,15 @@ typedef enum {
             [widths setObject:[NSNumber numberWithInt:(int)width] forKey:[NSNumber numberWithInt:(int)base + index]];
         }
     }
+}
+
+- (CGPDFReal) getRealForDict:(CGPDFDictionaryRef)dictRef forKey:(const char*)key {
+    CGPDFReal result;
+    if (CGPDFDictionaryGetNumber(dictRef, key, &result)) {
+        NSLog(@"Get real %s = %f", key, result);
+        return result;
+    }
+    return 0;
 }
 
 #pragma mark - Copying

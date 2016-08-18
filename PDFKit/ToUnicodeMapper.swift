@@ -135,10 +135,11 @@ class ToUnicodeMapper: NSObject {
     
     private func prepareData(fontMap: String) {
         
-        if let start = fontMap.rangeOfString("beginbfrange\n"), let stop = fontMap.rangeOfString("\nendbfrange") {
+        if let start = fontMap.rangeOfString("beginbfrange"), let stop = fontMap.rangeOfString("endbfrange") {
             var data = fontMap.substringToIndex(stop.startIndex)
             data = data.substringFromIndex(start.endIndex)
-            
+            data = data.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
+
             let lines = data.componentsSeparatedByString("\n")
             let regex = try! NSRegularExpression(pattern: "<(\\w+)>", options: .CaseInsensitive)
             
@@ -165,9 +166,11 @@ class ToUnicodeMapper: NSObject {
                 }
             }
             
-        } else if let start = fontMap.rangeOfString("beginbfchar\n"), let stop = fontMap.rangeOfString("\nendbfchar") {
+        } else if let start = fontMap.rangeOfString("beginbfchar"), let stop = fontMap.rangeOfString("endbfchar") {
+            
             var data = fontMap.substringToIndex(stop.startIndex)
             data = data.substringFromIndex(start.endIndex)
+            data = data.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
             
             let lines = data.componentsSeparatedByString("\n")
             let regex = try! NSRegularExpression(pattern: "<(\\w+)>", options: .CaseInsensitive)
@@ -190,5 +193,7 @@ class ToUnicodeMapper: NSObject {
                 }
             }
         }
+        
+        map[0] = ""
     }
 }
