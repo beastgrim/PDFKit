@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <CoreGraphics/CoreGraphics.h>
 
+@class RenderingState;
 
 struct CGPDFIntegerArray {
     CGPDFInteger *values;
@@ -42,8 +43,7 @@ typedef NS_ENUM (NSInteger, PDFFontType) {
 - (instancetype) initWithName:(NSString *)name defaultWidth:(CGFloat)defWidth widths:(NSMutableDictionary*)widths;
 
 - (CGPDFInteger) widthOfChar:(CGPDFInteger)charCode;
-- (CGPDFInteger) widthOfPDFString:(CGPDFStringRef)string;
-
+- (CGPDFInteger) widthOfPDFString:(CGPDFStringRef)pdfString renderingState:(RenderingState*)renderingState;
 
 - (NSString *)stringWithPDFString:(CGPDFStringRef)pdfString;
 

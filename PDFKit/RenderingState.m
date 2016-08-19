@@ -12,7 +12,8 @@
 		self.textMatrix = CGAffineTransformIdentity;
 		self.lineMatrix = CGAffineTransformIdentity;
         self.ctm = CGAffineTransformIdentity;
-		self.horizontalScaling = 1.0;
+        self.fontSize = 1;
+		self.horizontalScaling = 100.0;
     }
     return self;
 }
@@ -69,7 +70,7 @@
 /* Transforms the rendering state to the start of the next line */
 - (void)newLine
 {
-	[self newLineWithLeading:self.leadning save:NO];
+	[self newLineWithLeading:self.leadning save:YES];
 }
 
 /* Convert value to user space */

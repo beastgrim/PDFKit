@@ -8,6 +8,7 @@
 
 #import "PDFFont.h"
 #import "PDFKit-Swift.h"
+#import "RenderingState.h"
 
 const char *kEncodingKey = "Encoding";
 const char *kBaseEncodingKey = "BaseEncoding";
@@ -316,20 +317,45 @@ typedef enum {
     NSLog(@"widthOfChar %ld not found!", charCode);
     return defaultWidth;
 }
-- (CGPDFInteger)widthOfPDFString:(CGPDFStringRef)pdfString {
+
+- (CGPDFInteger)widthOfPDFString:(CGPDFStringRef)pdfString renderingState:(RenderingState*)renderingState {
     const unsigned char * characterCodes = CGPDFStringGetBytePtr(pdfString);
     int count = CGPDFStringGetLength(pdfString);
     CGPDFInteger result = 0;
     size_t countCodes = _widths.size;
     for (int i = 0; i < count; i++) {
-        char code = characterCodes[i];
+        unsigned char code = characterCodes[i];
         size_t charIndex = code - _firstChar;
         if (countCodes > charIndex) {
-            CGPDFInteger val = _widths.values[code];
-            result += val;
+            CGPDFInteger w0 = _widths.values[charIndex];
             
-//            NSNumber *w = widths[[NSNumber numberWithInt:(int)code]];
-            NSLog(@"Find width of char %d: %ld", code, val);
+            /* Right way parsing text positiong after drawing glif
+             tx = ((w0 - (Tj/1000))*Tfs + Tc + Tw)*Th
+             ty = (w1 -(Tj/1000))*Tfs + Tc + Tw
+             
+             where:
+             w0 and w1 are the glyph’s horizontal and vertical displacements
+             Tj is a position adjustment specified by a number in a TJ array, if any
+             Tfs and Th are the current text font size and horizontal scaling parameters in the graphics state
+             Tc and Tw are the current character and word spacing parameters in the graphics state, if applicable
+             
+             */
+            
+            CGPDFReal Tfs = renderingState.fontSize;
+            CGPDFReal Tc = renderingState.characterSpacing;
+            CGPDFReal Tw = code == 32 ? renderingState.wordSpacing : 0; // Word spacing works the same way as character spacing, but applies only to the space character, code 32.
+            CGPDFReal Th = renderingState.horizontalScaling / 100.0;
+            CGPDFReal width = (w0*Tfs + Tc + Tw)*Th;
+
+            result += width;
+
+            NSString *letter = _mapper.map[@(code)];
+            if (!letter) {
+                letter = _glifNameByCode[@(code)];
+                NSDictionary *cirillicMap = [ToUnicodeMapper standardCyrillicGlyphNames];
+                letter = cirillicMap[letter];
+            }
+            NSLog(@"Found width of char %@ = %ld(%f) (code: %d)", letter, w0, width, code);
         } else {
             NSLog(@"Error get char width index: %zu, charCode %d widthLength %zu", charIndex, code, countCodes);
         }
@@ -367,11 +393,11 @@ typedef enum {
         const unsigned char * characterCodes = CGPDFStringGetBytePtr(pdfString);
 
         NSMutableString *string = [NSMutableString string];
+        NSDictionary *cirillicMap = [ToUnicodeMapper standardCyrillicGlyphNames];
 
         for (int i = 0; i < length; i++) {
             uint8_t code = characterCodes[i];
             
-            NSDictionary *cirillicMap = [ToUnicodeMapper standardCyrillicGlyphNames];
             NSString *glif = _glifNameByCode[@(code)];
             
             if (glif) {

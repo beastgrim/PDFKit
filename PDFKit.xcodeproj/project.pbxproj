@@ -12,6 +12,21 @@
 		90014EE31D3E7AAD00E0283F /* ReaderThumbView.m in Sources */ = {isa = PBXBuildFile; fileRef = 90014EE21D3E7AAD00E0283F /* ReaderThumbView.m */; };
 		90014EE91D3E7B2900E0283F /* ReaderConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 90014EE81D3E7B2900E0283F /* ReaderConstants.m */; };
 		90014EEB1D3E7B3700E0283F /* ReaderContentTile.m in Sources */ = {isa = PBXBuildFile; fileRef = 90014EEA1D3E7B3700E0283F /* ReaderContentTile.m */; };
+		900B6A8D1D674EED0027B710 /* Courier-Bold.afm in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A7E1D674EED0027B710 /* Courier-Bold.afm */; };
+		900B6A8E1D674EED0027B710 /* Courier-BoldOblique.afm in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A7F1D674EED0027B710 /* Courier-BoldOblique.afm */; };
+		900B6A8F1D674EED0027B710 /* Courier-Oblique.afm in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A801D674EED0027B710 /* Courier-Oblique.afm */; };
+		900B6A901D674EED0027B710 /* Courier.afm in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A811D674EED0027B710 /* Courier.afm */; };
+		900B6A911D674EED0027B710 /* Helvetica-Bold.afm in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A821D674EED0027B710 /* Helvetica-Bold.afm */; };
+		900B6A921D674EED0027B710 /* Helvetica-BoldOblique.afm in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A831D674EED0027B710 /* Helvetica-BoldOblique.afm */; };
+		900B6A931D674EED0027B710 /* Helvetica-Oblique.afm in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A841D674EED0027B710 /* Helvetica-Oblique.afm */; };
+		900B6A941D674EED0027B710 /* Helvetica.afm in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A851D674EED0027B710 /* Helvetica.afm */; };
+		900B6A951D674EED0027B710 /* MustRead.html in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A861D674EED0027B710 /* MustRead.html */; };
+		900B6A961D674EED0027B710 /* Symbol.afm in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A871D674EED0027B710 /* Symbol.afm */; };
+		900B6A971D674EED0027B710 /* Times-Bold.afm in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A881D674EED0027B710 /* Times-Bold.afm */; };
+		900B6A981D674EED0027B710 /* Times-BoldItalic.afm in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A891D674EED0027B710 /* Times-BoldItalic.afm */; };
+		900B6A991D674EED0027B710 /* Times-Italic.afm in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A8A1D674EED0027B710 /* Times-Italic.afm */; };
+		900B6A9A1D674EED0027B710 /* Times-Roman.afm in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A8B1D674EED0027B710 /* Times-Roman.afm */; };
+		900B6A9B1D674EED0027B710 /* ZapfDingbats.afm in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A8C1D674EED0027B710 /* ZapfDingbats.afm */; };
 		9025EAFB1D3FCC78006CA315 /* RenderingState.m in Sources */ = {isa = PBXBuildFile; fileRef = 9025EAFA1D3FCC78006CA315 /* RenderingState.m */; };
 		903043141D24268F0060290E /* test.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 903043131D24268F0060290E /* test.pdf */; };
 		903043171D2427030060290E /* SearchResults.m in Sources */ = {isa = PBXBuildFile; fileRef = 903043161D2427030060290E /* SearchResults.m */; };
@@ -55,6 +70,21 @@
 		90014EE51D3E7AEC00E0283F /* ReaderContentTile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReaderContentTile.h; sourceTree = "<group>"; };
 		90014EE81D3E7B2900E0283F /* ReaderConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReaderConstants.m; sourceTree = "<group>"; };
 		90014EEA1D3E7B3700E0283F /* ReaderContentTile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReaderContentTile.m; sourceTree = "<group>"; };
+		900B6A7E1D674EED0027B710 /* Courier-Bold.afm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Courier-Bold.afm"; sourceTree = "<group>"; };
+		900B6A7F1D674EED0027B710 /* Courier-BoldOblique.afm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Courier-BoldOblique.afm"; sourceTree = "<group>"; };
+		900B6A801D674EED0027B710 /* Courier-Oblique.afm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Courier-Oblique.afm"; sourceTree = "<group>"; };
+		900B6A811D674EED0027B710 /* Courier.afm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Courier.afm; sourceTree = "<group>"; };
+		900B6A821D674EED0027B710 /* Helvetica-Bold.afm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Helvetica-Bold.afm"; sourceTree = "<group>"; };
+		900B6A831D674EED0027B710 /* Helvetica-BoldOblique.afm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Helvetica-BoldOblique.afm"; sourceTree = "<group>"; };
+		900B6A841D674EED0027B710 /* Helvetica-Oblique.afm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Helvetica-Oblique.afm"; sourceTree = "<group>"; };
+		900B6A851D674EED0027B710 /* Helvetica.afm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Helvetica.afm; sourceTree = "<group>"; };
+		900B6A861D674EED0027B710 /* MustRead.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = MustRead.html; sourceTree = "<group>"; };
+		900B6A871D674EED0027B710 /* Symbol.afm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Symbol.afm; sourceTree = "<group>"; };
+		900B6A881D674EED0027B710 /* Times-Bold.afm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Times-Bold.afm"; sourceTree = "<group>"; };
+		900B6A891D674EED0027B710 /* Times-BoldItalic.afm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Times-BoldItalic.afm"; sourceTree = "<group>"; };
+		900B6A8A1D674EED0027B710 /* Times-Italic.afm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Times-Italic.afm"; sourceTree = "<group>"; };
+		900B6A8B1D674EED0027B710 /* Times-Roman.afm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Times-Roman.afm"; sourceTree = "<group>"; };
+		900B6A8C1D674EED0027B710 /* ZapfDingbats.afm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ZapfDingbats.afm; sourceTree = "<group>"; };
 		9025EAF91D3FCC78006CA315 /* RenderingState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RenderingState.h; sourceTree = "<group>"; };
 		9025EAFA1D3FCC78006CA315 /* RenderingState.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RenderingState.m; sourceTree = "<group>"; };
 		903043131D24268F0060290E /* test.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = test.pdf; sourceTree = "<group>"; };
@@ -123,6 +153,28 @@
 				90014EEA1D3E7B3700E0283F /* ReaderContentTile.m */,
 			);
 			name = "PDF Render";
+			sourceTree = "<group>";
+		};
+		900B6A7D1D674EED0027B710 /* Core14_AFMs */ = {
+			isa = PBXGroup;
+			children = (
+				900B6A7E1D674EED0027B710 /* Courier-Bold.afm */,
+				900B6A7F1D674EED0027B710 /* Courier-BoldOblique.afm */,
+				900B6A801D674EED0027B710 /* Courier-Oblique.afm */,
+				900B6A811D674EED0027B710 /* Courier.afm */,
+				900B6A821D674EED0027B710 /* Helvetica-Bold.afm */,
+				900B6A831D674EED0027B710 /* Helvetica-BoldOblique.afm */,
+				900B6A841D674EED0027B710 /* Helvetica-Oblique.afm */,
+				900B6A851D674EED0027B710 /* Helvetica.afm */,
+				900B6A861D674EED0027B710 /* MustRead.html */,
+				900B6A871D674EED0027B710 /* Symbol.afm */,
+				900B6A881D674EED0027B710 /* Times-Bold.afm */,
+				900B6A891D674EED0027B710 /* Times-BoldItalic.afm */,
+				900B6A8A1D674EED0027B710 /* Times-Italic.afm */,
+				900B6A8B1D674EED0027B710 /* Times-Roman.afm */,
+				900B6A8C1D674EED0027B710 /* ZapfDingbats.afm */,
+			);
+			path = Core14_AFMs;
 			sourceTree = "<group>";
 		};
 		90DA1DB81D1C48EB00519EE9 = {
@@ -195,6 +247,7 @@
 		90DA1DE91D1C49A800519EE9 /* SupportFiles */ = {
 			isa = PBXGroup;
 			children = (
+				900B6A7D1D674EED0027B710 /* Core14_AFMs */,
 				90DA1DC81D1C48EB00519EE9 /* Main.storyboard */,
 				90DA1DE51D1C499700519EE9 /* PDFKit-Bridging-Header.h */,
 				90DA1DCB1D1C48EB00519EE9 /* Assets.xcassets */,
@@ -285,14 +338,29 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				900B6A961D674EED0027B710 /* Symbol.afm in Resources */,
 				90DA1DEB1D1C49F600519EE9 /* test_simple.pdf in Resources */,
 				90DA1DCF1D1C48EB00519EE9 /* LaunchScreen.storyboard in Resources */,
+				900B6A9B1D674EED0027B710 /* ZapfDingbats.afm in Resources */,
+				900B6A931D674EED0027B710 /* Helvetica-Oblique.afm in Resources */,
+				900B6A901D674EED0027B710 /* Courier.afm in Resources */,
+				900B6A941D674EED0027B710 /* Helvetica.afm in Resources */,
+				900B6A8D1D674EED0027B710 /* Courier-Bold.afm in Resources */,
+				900B6A8F1D674EED0027B710 /* Courier-Oblique.afm in Resources */,
+				900B6A8E1D674EED0027B710 /* Courier-BoldOblique.afm in Resources */,
+				900B6A951D674EED0027B710 /* MustRead.html in Resources */,
 				90587D2D1D5B158500C16FF8 /* failsearch.pdf in Resources */,
 				90DA1DCC1D1C48EB00519EE9 /* Assets.xcassets in Resources */,
 				90DA1DCA1D1C48EB00519EE9 /* Main.storyboard in Resources */,
 				908118021D621BE600CD4FC9 /* Untitled.pdf in Resources */,
 				904CE53C1D4A5D1B0097ACA2 /* unsearch.pdf in Resources */,
+				900B6A9A1D674EED0027B710 /* Times-Roman.afm in Resources */,
 				903043141D24268F0060290E /* test.pdf in Resources */,
+				900B6A981D674EED0027B710 /* Times-BoldItalic.afm in Resources */,
+				900B6A971D674EED0027B710 /* Times-Bold.afm in Resources */,
+				900B6A911D674EED0027B710 /* Helvetica-Bold.afm in Resources */,
+				900B6A991D674EED0027B710 /* Times-Italic.afm in Resources */,
+				900B6A921D674EED0027B710 /* Helvetica-BoldOblique.afm in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
