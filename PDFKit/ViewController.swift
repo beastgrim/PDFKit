@@ -46,13 +46,8 @@ class ViewController: UIViewController {
             drawResultsView.pageSize = pdfPageView.bounds.size;
             view.addSubview(pdfPageView)
         }
-        let fonts = document.getFontsForPageNumber(pageIndex)
-        for font in fonts {
-            
-            drawResultsView.fonts.append(font.bBoxRect)
-        }
 
-        let results = document.searchText("на", onPage: UInt(pageIndex))
+        let results = document.searchText("думы", onPage: UInt(pageIndex))
         
         view.bringSubviewToFront(drawResultsView)
         drawResultsView.layer.borderWidth = 2

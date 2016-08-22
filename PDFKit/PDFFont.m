@@ -318,11 +318,114 @@ typedef enum {
     return defaultWidth;
 }
 
+- (void)decodePDFString:(CGPDFStringRef)pdfString renderingState:(RenderingState*)renderingState callback:(void(^)(NSString * character, CGSize size))callback {
+    
+    if (_mapper) {
+        // Character codes
+        const unsigned char * characterCodes = CGPDFStringGetBytePtr(pdfString);
+        int count = CGPDFStringGetLength(pdfString);
+
+        uint16_t code2 = characterCodes[1] + (characterCodes[0] << 8);  // 16 byte code
+        
+        for (int i = 0; i < count; i++) {
+            
+            char code = characterCodes[i];
+            
+            NSString *letter = _mapper.map[@(code)];
+            if (letter) {
+                CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
+                callback(letter, CGSizeMake(width, width));
+            } else {
+                NSString *letter = _mapper.map[@(code2)];
+                CGPDFReal width = widthOfCharCode(code2, (__bridge void *)(self), (__bridge void *)(renderingState));
+                callback(letter, CGSizeMake(width, width));
+                return;
+            }
+        }
+        
+    } else if (_glifNameByCode) {
+        
+        int length = CGPDFStringGetLength(pdfString);
+        const unsigned char * characterCodes = CGPDFStringGetBytePtr(pdfString);
+        
+        NSDictionary *cirillicMap = [ToUnicodeMapper standardCyrillicGlyphNames];
+        
+        for (int i = 0; i < length; i++) {
+            uint8_t code = characterCodes[i];
+            
+            NSString *glif = _glifNameByCode[@(code)];
+            
+            if (glif) {
+                if (glif.length == 1) {
+                    CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
+                    callback(glif, CGSizeMake(width, width));
+                } else {
+                    NSString *letter = cirillicMap[glif] ?: @"?";
+                    CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
+                    callback(letter, CGSizeMake(width, width));
+                }
+                
+            } else {
+                NSLog(@"UNCNOWN CODE %d", code);
+                CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
+                callback(@" ", CGSizeMake(width, width));
+            }
+        }
+        
+        return;
+    }
+
+#warning English letters not handled
+//    return (NSString *)CFBridgingRelease(CGPDFStringCopyTextString(pdfString));
+}
+
+CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderState) {
+    PDFFont *font = (__bridge PDFFont *)(userInfo);
+    RenderingState *renderingState = (__bridge RenderingState *)(renderState);
+    
+    size_t countCodes = font.widths.size;
+
+    size_t charIndex = code - font.firstChar;
+    if (countCodes > charIndex) {
+        CGPDFInteger w0 = font.widths.values[charIndex];
+        
+        /* Right way parsing text positiong after drawing glif
+         tx = ((w0 - (Tj/1000))*Tfs + Tc + Tw)*Th
+         ty = (w1 -(Tj/1000))*Tfs + Tc + Tw
+         
+         where:
+         w0 and w1 are the glyph’s horizontal and vertical displacements
+         Tj is a position adjustment specified by a number in a TJ array, if any
+         Tfs and Th are the current text font size and horizontal scaling parameters in the graphics state
+         Tc and Tw are the current character and word spacing parameters in the graphics state, if applicable
+         */
+        
+        CGPDFReal Tfs = renderingState.fontSize;
+        CGPDFReal Tc = renderingState.characterSpacing;
+        CGPDFReal Tw = code == 32 ? renderingState.wordSpacing : 0; // Word spacing works the same way as character spacing, but applies only to the space character, code 32.
+        CGPDFReal Th = renderingState.horizontalScaling / 100.0;
+        CGPDFReal width = (w0*Tfs + Tc + Tw)*Th;
+        
+        
+//        NSString *letter = font.mapper.map[@(code)];
+//        if (!letter) {
+//            letter = font.glifNameByCode[@(code)];
+//            NSDictionary *cirillicMap = [ToUnicodeMapper standardCyrillicGlyphNames];
+//            letter = cirillicMap[letter];
+//        }
+        return width;
+    } else {
+        NSLog(@"ERROR: get char width index: %zu, charCode %d widthLength %zu", charIndex, code, countCodes);
+        return 0;
+    }
+}
+
 - (CGPDFInteger)widthOfPDFString:(CGPDFStringRef)pdfString renderingState:(RenderingState*)renderingState {
     const unsigned char * characterCodes = CGPDFStringGetBytePtr(pdfString);
     int count = CGPDFStringGetLength(pdfString);
     CGPDFInteger result = 0;
     size_t countCodes = _widths.size;
+    
     for (int i = 0; i < count; i++) {
         unsigned char code = characterCodes[i];
         size_t charIndex = code - _firstChar;
@@ -362,6 +465,7 @@ typedef enum {
     }
     return result ?: 500;
 }
+
 
 - (NSString *)stringWithPDFString:(CGPDFStringRef)pdfString {
     

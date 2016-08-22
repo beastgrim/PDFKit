@@ -8,13 +8,13 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreGraphics/CoreGraphics.h>
-#import "PDFPage.h"
 
 @interface PDFSearcher : NSObject
 
 @property (nonatomic, retain) NSMutableString * unicodeContent;
 
-- (PDFPage*)pageInfoForPDFPage:(CGPDFPageRef)inPage;
-- (BOOL) page:(CGPDFPageRef)inPage containsString:(NSString *)inSearchString;
+//- (PDFPage*)pageInfoForPDFPage:(CGPDFPageRef)inPage;
+//- (BOOL) page:(CGPDFPageRef)inPage containsString:(NSString *)inSearchString;
+- (NSArray <NSValue *> *)searchString:(NSString *)inSearchString inPage:(CGPDFPageRef)inPage;
 
 @end

@@ -11,6 +11,5 @@
 
 #import "PDFSearcher.h"
 #import "PDFDocument.h"
-#import "PDFPage.h"
 
 #endif /* PDFKit_h */

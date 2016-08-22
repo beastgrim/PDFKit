@@ -10,14 +10,13 @@ import UIKit
 
 class ResultsDrawView: UIView {
 
-    var searchResults = [SearchResults]() {
+    var searchResults = [NSValue]() {
         didSet {
             setNeedsDisplay()
         }
     }
     var pageSize: CGSize = CGSizeZero
     var scale: CGFloat = 1
-    var fonts = [CGRect]()
     
 
     private var drawAtttributes = [NSFontAttributeName: UIFont.systemFontOfSize(12), NSBackgroundColorAttributeName: UIColor.yellowColor().colorWithAlphaComponent(0.9), NSForegroundColorAttributeName: UIColor.blackColor().colorWithAlphaComponent(0.5)]
@@ -41,24 +40,16 @@ class ResultsDrawView: UIView {
 //            let height = res.textRect.size.height
 //            CGContextFillRect(ctx, CGRectMake(x, y+height+2, width, 2))
             
-            var textRect = res.textRect
-            textRect.origin.y = (res.textRect.origin.y - res.textRect.size.height)*scale + 3 // - font size + padding
-            textRect.origin.x *= scale
-            textRect.size.height *= scale
-            textRect.size.width *= scale
+            var textRect = res.CGRectValue()
+            textRect.size.height = 1
+
+//            textRect.origin.y = (textRect.origin.y - textRect.size.height)*scale + 3 // - font size + padding
+//            textRect.origin.x *= scale
+//            textRect.size.height *= scale
+//            textRect.size.width *= scale
             
             CGContextStrokeRect(ctx, textRect)
             
-            UIColor.greenColor().set()
-            for rect in fonts {
-                var res = rect
-                res.origin.y = pageSize.height - rect.origin.y
-                CGContextStrokeRect(ctx, rect)
-            }
-//            if let text = res.nextText {
-//                drawAtttributes[NSFontAttributeName] = UIFont.systemFontOfSize(round(height))
-//                (text as NSString).drawInRect(CGRectMake(x, y, 200, height+4), withAttributes: drawAtttributes)
-//            }
         }
     }
 

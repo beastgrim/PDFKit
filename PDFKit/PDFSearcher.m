@@ -51,7 +51,12 @@ void printPDFObject(CGPDFObjectRef pdfObject);
     NSMutableArray *fontDataArray;
     NSData *CIDToUnicodeData;
     NSString *currentFontName;
-    NSMutableArray *positioningByLocation;
+    NSString *searchStr;
+    NSMutableArray <NSValue*> *searchResults;
+    NSInteger foundIndex;
+    NSInteger searchLength;
+    CGPoint startSearchPoint;
+    CGSize pageSize;
 }
 
 @synthesize fontInfo;
@@ -112,28 +117,10 @@ void printPDFObject(CGPDFObjectRef pdfObject);
 
 
 #pragma mark - Public
-- (PDFPage*)pageInfoForPDFPage:(CGPDFPageRef)inPage {
-    [self fontCollectionWithPage:inPage];
-    
-    positioningByLocation = [NSMutableArray new];
-    
-    CGPDFContentStreamRef contentStream = CGPDFContentStreamCreateWithPage(inPage);
-    CGPDFScannerRef scanner = CGPDFScannerCreate(contentStream, table, (__bridge void * _Nullable)(self));
-    CGPDFScannerScan(scanner);
-    CGPDFScannerRelease(scanner);
-    CGPDFContentStreamRelease(contentStream);
-    
-    CGRect cropBoxRect = CGPDFPageGetBoxRect(inPage, kCGPDFCropBox);
-    PDFPage *page = [[PDFPage alloc] initWithSize:cropBoxRect.size content:_unicodeContent textPositions:positioningByLocation];
-    page.fonts = _fontByFontName.allValues;
-    return page;
-}
 
 -(BOOL)page:(CGPDFPageRef)inPage containsString:(NSString *)inSearchString;
 {
     [self fontCollectionWithPage:inPage];
-    
-    positioningByLocation = [NSMutableArray new];
     
     CGPDFContentStreamRef contentStream = CGPDFContentStreamCreateWithPage(inPage);
     CGPDFScannerRef scanner = CGPDFScannerCreate(contentStream, table, (__bridge void * _Nullable)(self));
@@ -141,13 +128,29 @@ void printPDFObject(CGPDFObjectRef pdfObject);
     CGPDFScannerRelease(scanner);
     CGPDFContentStreamRelease(contentStream);
     
-    
+    searchStr = [inSearchString uppercaseString];
 //    NSLog(@"%@", fontInfo);
     NSLog(@"%@", _unicodeContent);
-    return ret && ([[_unicodeContent uppercaseString]
-             rangeOfString:[inSearchString uppercaseString]].location != NSNotFound);
+    return ret && ([[_unicodeContent uppercaseString] rangeOfString:[inSearchString uppercaseString]].location != NSNotFound);
 }
 
+- (NSArray<NSValue *> *)searchString:(NSString *)inSearchString inPage:(CGPDFPageRef)inPage {
+    searchResults = [NSMutableArray new];
+    searchStr = [inSearchString uppercaseString];
+    searchLength = searchStr.length;
+    CGRect cropBoxRect = CGPDFPageGetBoxRect(inPage, kCGPDFCropBox);
+    pageSize = cropBoxRect.size;
+    
+    [self fontCollectionWithPage:inPage];
+    
+    CGPDFContentStreamRef contentStream = CGPDFContentStreamCreateWithPage(inPage);
+    CGPDFScannerRef scanner = CGPDFScannerCreate(contentStream, table, (__bridge void * _Nullable)(self));
+    CGPDFScannerScan(scanner);
+    CGPDFScannerRelease(scanner);
+    CGPDFContentStreamRelease(contentStream);
+    
+    return searchResults;
+}
 
 
 const char *kTypeKey = "Type";
@@ -160,25 +163,6 @@ const char *kWidthsKey = "Widths";
 const char *kFontKey = "Font";
 
 #pragma mark - Base
-- (void) saveTextPositionWithMatrix:(CGAffineTransform)transform {
-    CGPoint origin = CGPointMake(transform.tx, transform.ty);
-    NSInteger location = _unicodeContent.length;
-    TextPosition *lastPos = [positioningByLocation lastObject];
-    CGFloat currentFontSize = self.renderingState.fontSize;
-    
-    TextPosition *textPos = [TextPosition new];
-    textPos.location = location;
-    textPos.origin = origin;
-    textPos.fontName = currentFontName;
-    textPos.fontSize = CGSizeMake(currentFontSize*transform.a, currentFontSize*transform.d);
-    textPos.transform = transform;
-    
-    if (lastPos && lastPos.location == location) {  // replace last position
-        [positioningByLocation replaceObjectAtIndex:positioningByLocation.count-1 withObject:textPos];
-    } else {
-        [positioningByLocation addObject:textPos];
-    }
-}
 
 - (PDFFont*)currentFont {
     return _fontByFontName[currentFontName];
@@ -189,13 +173,35 @@ const char *kFontKey = "Font";
     PDFFont *font = [self currentFont];
     RenderingState *renderState = self.renderingState;
     
-    CGPDFReal width = [font widthOfPDFString:pdfString renderingState:renderState] / 1000.0;
-    NSString *result = [font stringWithPDFString:pdfString];
-    
-    [_unicodeContent appendFormat:@"%@", result];
-    
-    [self translateTextPosition:CGSizeMake(width, 0)];
-    [self saveTextPositionWithMatrix:renderState.textMatrix];
+    __weak typeof(self) weakSelf = self;
+    [font decodePDFString:pdfString renderingState:renderState callback:^(NSString *character, CGSize size) {
+        
+        [weakSelf.unicodeContent appendFormat:@"%@", character];
+        
+        NSRange currentRange = NSMakeRange(foundIndex, 1);
+        const CGFloat width = size.width/1000.0;
+        
+        if ([[character uppercaseString] isEqualToString:[searchStr substringWithRange:currentRange]]) {
+            foundIndex++;
+
+            if (foundIndex == 1) {
+                startSearchPoint = CGPointMake(renderState.textMatrix.tx, pageSize.height - renderState.textMatrix.ty);
+            }
+            if (foundIndex == searchLength) {       // save result and start new search
+                foundIndex = 0;
+                
+                CGAffineTransform tf = CGAffineTransformTranslate(weakSelf.renderingState.textMatrix, width, 0);
+                CGFloat resultWidth = MAX(0, tf.tx - startSearchPoint.x);
+                CGRect result = CGRectMake(startSearchPoint.x, pageSize.height-tf.ty, resultWidth, width);
+                [searchResults addObject:[NSValue valueWithCGRect:result]];
+            }
+            
+        } else {    // reset search
+            foundIndex = 0;
+        }
+        
+        [weakSelf translateTextPosition:CGSizeMake(width, 0)];
+    }];
 }
 
 #pragma mark - Fonts
@@ -257,7 +263,6 @@ void newLine(CGPDFScannerRef inScanner, void *userInfo) {
     PDFSearcher * searcher = (__bridge PDFSearcher *)userInfo;
     
     [searcher.renderingState newLine];
-    [searcher saveTextPositionWithMatrix:searcher.renderingState.textMatrix];
 }
 
 void newLineSetLeading(CGPDFScannerRef inScanner, void *userInfo) {
@@ -267,7 +272,6 @@ void newLineSetLeading(CGPDFScannerRef inScanner, void *userInfo) {
     CGPDFScannerPopNumber(inScanner, &ty);
     CGPDFScannerPopNumber(inScanner, &tx);
     [searcher.renderingState newLineWithLeading:-ty indent:tx save:YES];
-    [searcher saveTextPositionWithMatrix:searcher.renderingState.textMatrix];
 }
 
 void newLineWithLeading(CGPDFScannerRef inScanner, void *userInfo) {
@@ -277,7 +281,6 @@ void newLineWithLeading(CGPDFScannerRef inScanner, void *userInfo) {
     CGPDFScannerPopNumber(inScanner, &ty);
     CGPDFScannerPopNumber(inScanner, &tx);
     [searcher.renderingState newLineWithLeading:-ty indent:tx save:NO];
-    [searcher saveTextPositionWithMatrix:searcher.renderingState.textMatrix];
 }
 
 void textMatrixCallback(CGPDFScannerRef inScanner, void *userInfo) {
@@ -287,7 +290,6 @@ void textMatrixCallback(CGPDFScannerRef inScanner, void *userInfo) {
 
     NSLog(@"textMatrixCallback %f:%f", transform.tx, transform.ty);
     [searcher.renderingState setTextMatrix:transform replaceLineMatrix:YES];
-    [searcher saveTextPositionWithMatrix:searcher.renderingState.textMatrix];
 }
 
 #pragma mark Font info
@@ -310,7 +312,6 @@ void fontInfoCallback(CGPDFScannerRef inScanner, void *userInfo)
 void startTextCallback(CGPDFScannerRef inScanner, void *userInfo) {
     PDFSearcher * searcher = (__bridge PDFSearcher *)userInfo;
     [searcher.renderingState setTextMatrix:CGAffineTransformIdentity replaceLineMatrix:YES];
-    [searcher saveTextPositionWithMatrix:searcher.renderingState.textMatrix];
 }
 
 void endTextCallback(CGPDFScannerRef inScanner, void *userInfo) {
@@ -352,7 +353,6 @@ void stringAndSpacesCallback(CGPDFScannerRef inScanner, void *userInfo)
             CGPDFReal width = ((0 - (space / 1000.0))*Tfs + Tc + Tw)*Th;
   
             [searcher translateTextPosition:CGSizeMake(width, 0)];
-            [searcher saveTextPositionWithMatrix:searcher.renderingState.textMatrix];
         }
     }
 }
@@ -449,7 +449,7 @@ void setTextRise(CGPDFScannerRef pdfScanner, void *userInfo) {
 }
 
 void test(CGPDFScannerRef pdfScanner, void *userInfo) {
-    PDFSearcher *searcher = (__bridge PDFSearcher *)userInfo;
+//    PDFSearcher *searcher = (__bridge PDFSearcher *)userInfo;
     NSLog(@"Warning: Test callback not emplemented");
 //    [searcher.renderingState setTextRise:getNumber(pdfScanner)];
 }

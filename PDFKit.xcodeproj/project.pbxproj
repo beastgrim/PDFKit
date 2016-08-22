@@ -29,7 +29,6 @@
 		900B6A9B1D674EED0027B710 /* ZapfDingbats.afm in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A8C1D674EED0027B710 /* ZapfDingbats.afm */; };
 		9025EAFB1D3FCC78006CA315 /* RenderingState.m in Sources */ = {isa = PBXBuildFile; fileRef = 9025EAFA1D3FCC78006CA315 /* RenderingState.m */; };
 		903043141D24268F0060290E /* test.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 903043131D24268F0060290E /* test.pdf */; };
-		903043171D2427030060290E /* SearchResults.m in Sources */ = {isa = PBXBuildFile; fileRef = 903043161D2427030060290E /* SearchResults.m */; };
 		903043191D242CBC0060290E /* ResultsDrawView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 903043181D242CBC0060290E /* ResultsDrawView.swift */; };
 		9031ADC01D265BC100CB04AE /* PDFFont.m in Sources */ = {isa = PBXBuildFile; fileRef = 9031ADBF1D265BC100CB04AE /* PDFFont.m */; };
 		904CE53C1D4A5D1B0097ACA2 /* unsearch.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 904CE53B1D4A5D1B0097ACA2 /* unsearch.pdf */; };
@@ -45,7 +44,6 @@
 		90DA1DEB1D1C49F600519EE9 /* test_simple.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 90DA1DEA1D1C49F600519EE9 /* test_simple.pdf */; };
 		90DA1DED1D1C4A8900519EE9 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90DA1DEC1D1C4A8900519EE9 /* CoreGraphics.framework */; };
 		90DA1DF01D1C4E7000519EE9 /* PDFDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 90DA1DEF1D1C4E7000519EE9 /* PDFDocument.m */; };
-		90DA1DF31D1C52F200519EE9 /* PDFPage.m in Sources */ = {isa = PBXBuildFile; fileRef = 90DA1DF21D1C52F200519EE9 /* PDFPage.m */; };
 		90DA1DF61D1C590E00519EE9 /* ToUnicodeMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DA1DF51D1C590E00519EE9 /* ToUnicodeMapper.swift */; };
 /* End PBXBuildFile section */
 
@@ -88,8 +86,6 @@
 		9025EAF91D3FCC78006CA315 /* RenderingState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RenderingState.h; sourceTree = "<group>"; };
 		9025EAFA1D3FCC78006CA315 /* RenderingState.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RenderingState.m; sourceTree = "<group>"; };
 		903043131D24268F0060290E /* test.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = test.pdf; sourceTree = "<group>"; };
-		903043151D2427030060290E /* SearchResults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchResults.h; sourceTree = "<group>"; };
-		903043161D2427030060290E /* SearchResults.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SearchResults.m; sourceTree = "<group>"; };
 		903043181D242CBC0060290E /* ResultsDrawView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ResultsDrawView.swift; sourceTree = "<group>"; };
 		9031ADBE1D265BC100CB04AE /* PDFFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDFFont.h; sourceTree = "<group>"; };
 		9031ADBF1D265BC100CB04AE /* PDFFont.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDFFont.m; sourceTree = "<group>"; };
@@ -113,8 +109,6 @@
 		90DA1DEC1D1C4A8900519EE9 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		90DA1DEE1D1C4E7000519EE9 /* PDFDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDFDocument.h; sourceTree = "<group>"; };
 		90DA1DEF1D1C4E7000519EE9 /* PDFDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDFDocument.m; sourceTree = "<group>"; };
-		90DA1DF11D1C52F200519EE9 /* PDFPage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDFPage.h; sourceTree = "<group>"; };
-		90DA1DF21D1C52F200519EE9 /* PDFPage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDFPage.m; sourceTree = "<group>"; };
 		90DA1DF41D1C531700519EE9 /* PDFKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDFKit.h; sourceTree = "<group>"; };
 		90DA1DF51D1C590E00519EE9 /* ToUnicodeMapper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ToUnicodeMapper.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -234,10 +228,6 @@
 				9031ADBF1D265BC100CB04AE /* PDFFont.m */,
 				90DA1DEE1D1C4E7000519EE9 /* PDFDocument.h */,
 				90DA1DEF1D1C4E7000519EE9 /* PDFDocument.m */,
-				90DA1DF11D1C52F200519EE9 /* PDFPage.h */,
-				90DA1DF21D1C52F200519EE9 /* PDFPage.m */,
-				903043151D2427030060290E /* SearchResults.h */,
-				903043161D2427030060290E /* SearchResults.m */,
 				9025EAF91D3FCC78006CA315 /* RenderingState.h */,
 				9025EAFA1D3FCC78006CA315 /* RenderingState.m */,
 			);
@@ -388,8 +378,6 @@
 				9025EAFB1D3FCC78006CA315 /* RenderingState.m in Sources */,
 				90DA1DE81D1C499800519EE9 /* PDFSearcher.m in Sources */,
 				903043191D242CBC0060290E /* ResultsDrawView.swift in Sources */,
-				903043171D2427030060290E /* SearchResults.m in Sources */,
-				90DA1DF31D1C52F200519EE9 /* PDFPage.m in Sources */,
 				90DA1DC51D1C48EB00519EE9 /* AppDelegate.swift in Sources */,
 				90014EDF1D3E7A8200E0283F /* ReaderContentPage.m in Sources */,
 				90DA1DF61D1C590E00519EE9 /* ToUnicodeMapper.swift in Sources */,

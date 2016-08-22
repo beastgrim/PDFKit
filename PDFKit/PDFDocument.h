@@ -7,7 +7,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "SearchResults.h"
 #import "ReaderContentView.h"
 #import "PDFFont.h"
 
@@ -16,11 +15,11 @@
 @property (nonatomic, readonly) NSInteger numberOfPages;
 
 - (instancetype __nullable)initWithData:(NSData* __nonnull)pdfData;
-- (NSArray <SearchResults*> * __nonnull) searchText:(NSString * __nonnull)text;
-- (NSArray <SearchResults*> * __nonnull) searchText:(NSString * __nonnull)text onPage:(NSUInteger)pageNumber;
+
+- (NSArray <NSValue*> * __nonnull) searchText:(NSString * __nonnull)text onPage:(NSUInteger)pageNumber;
 
 - (ReaderContentView* __nullable) viewForPageNumber:(NSInteger)pageNumber;
 
-- (NSArray<PDFFont*>*) getFontsForPageNumber:(NSInteger)pageNumber;
+//- (NSArray<PDFFont*>*) getFontsForPageNumber:(NSInteger)pageNumber;
 
 @end

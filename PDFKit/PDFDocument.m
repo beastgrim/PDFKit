@@ -26,47 +26,16 @@
     return self;
 }
 
-- (NSArray <SearchResults*>*)searchText:(NSString *)text {
+- (NSArray <NSValue*>*)searchText:(NSString *)text onPage:(NSUInteger)pageNumber {
     PDFSearcher *searh = [PDFSearcher new];
-        
-    for (NSUInteger i = 0; i < _numberOfPages; i++) {
-        CGPDFPageRef page = [self pageWithIndex:i];
-        [searh page:page containsString:@""];
-        NSLog(@"Searcher find text: %@", searh.unicodeContent);
-    }
-    return nil;
-}
-
-- (NSArray <SearchResults*>*)searchText:(NSString *)text onPage:(NSUInteger)pageNumber {
-    PDFSearcher *searh = [PDFSearcher new];
-    PDFPage *pageInfo;
-    NSMutableArray <SearchResults*>*results = [NSMutableArray new];
-
+    NSMutableArray <NSValue*>*results = [NSMutableArray new];
+    
     if (pageNumber < _numberOfPages) {
         CGPDFPageRef page = [self pageWithIndex:pageNumber];
-        pageInfo = [searh pageInfoForPDFPage:page];
-        
-        NSError *err;
-        NSRegularExpression * regex = [NSRegularExpression regularExpressionWithPattern:text options:NSRegularExpressionCaseInsensitive error:&err];
-        NSString *content = pageInfo.unicodeContent;
-        
-        
-        [regex enumerateMatchesInString:pageInfo.unicodeContent options:0 range:NSMakeRange(0, content.length) usingBlock:^(NSTextCheckingResult * _Nullable result, NSMatchingFlags flags, BOOL * _Nonnull stop) {
-            
-            NSRange range = result.range;
-            
-            CGRect textRect = [pageInfo rectForTextRange:range];
-            
-            SearchResults *searchResult = [[SearchResults alloc] initWithRect:textRect];
-            
-            NSUInteger length = range.location + 10 < content.length ?  10 : content.length - range.location;
-            NSRange nextTextRange = NSMakeRange(range.location, length);
-            searchResult.nextText = [[content substringWithRange:nextTextRange] copy];
-            [results addObject:searchResult];
-        }];
+        return [searh searchString:text inPage:page];
     }
     
-    NSLog(@"Searcher find text: %@ PageInfo: %@", searh.unicodeContent, pageInfo);
+    NSLog(@"Searcher find text: %@", searh.unicodeContent);
     return results;
 }
 
@@ -93,12 +62,12 @@
     return nil;
 }
 
-- (NSArray<PDFFont *> *)getFontsForPageNumber:(NSInteger)pageNumber {
-    CGPDFPageRef page = [self pageWithIndex:pageNumber];
-    PDFSearcher *searh = [PDFSearcher new];
-    PDFPage * pageInfo = [searh pageInfoForPDFPage:page];
-
-    return pageInfo.fonts;
-}
+//- (NSArray<PDFFont *> *)getFontsForPageNumber:(NSInteger)pageNumber {
+//    CGPDFPageRef page = [self pageWithIndex:pageNumber];
+//    PDFSearcher *searh = [PDFSearcher new];
+//    PDFPage * pageInfo = [searh pageInfoForPDFPage:page];
+//
+//    return pageInfo.fonts;
+//}
 
 @end
