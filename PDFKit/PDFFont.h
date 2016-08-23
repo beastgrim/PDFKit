@@ -23,7 +23,7 @@ typedef NS_ENUM (NSInteger, PDFFontType) {
     PDFFontType3
 };
 
-@interface PDFFont : NSObject <NSCopying>
+@interface PDFFont : NSObject
 
 @property (nonatomic, readonly) PDFFontType type;
 @property (nonatomic, readonly) NSString *name;
@@ -40,7 +40,6 @@ typedef NS_ENUM (NSInteger, PDFFontType) {
 
 
 - (instancetype) initWithName:(NSString *)name fontDict:(CGPDFDictionaryRef)fontDict;
-- (instancetype) initWithName:(NSString *)name defaultWidth:(CGFloat)defWidth widths:(NSMutableDictionary*)widths;
 
 - (CGPDFInteger) widthOfChar:(CGPDFInteger)charCode;
 - (CGPDFInteger) widthOfPDFString:(CGPDFStringRef)pdfString renderingState:(RenderingState*)renderingState;

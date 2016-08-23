@@ -13,8 +13,6 @@
 
 @property (nonatomic, retain) NSMutableString * unicodeContent;
 
-//- (PDFPage*)pageInfoForPDFPage:(CGPDFPageRef)inPage;
-//- (BOOL) page:(CGPDFPageRef)inPage containsString:(NSString *)inSearchString;
 - (NSArray <NSValue *> *)searchString:(NSString *)inSearchString inPage:(CGPDFPageRef)inPage;
 
 @end

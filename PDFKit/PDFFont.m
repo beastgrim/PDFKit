@@ -50,7 +50,6 @@ typedef enum {
 
 @implementation PDFFont {
     CGFloat defaultWidth;
-    NSMutableDictionary *widths;
     CharacterEncoding encoding;
 }
 
@@ -59,7 +58,6 @@ typedef enum {
     
     if (self = [super init]) {
         _name = name;
-        widths = [NSMutableDictionary new];
         defaultWidth = 1000;
         
         const char *subtype;
@@ -195,77 +193,6 @@ typedef enum {
                 _widths.values[i] = val;
             }
         }
-        
-        CGPDFArrayRef widthsArray;
-        if (CGPDFDictionaryGetArray(fontDict, kWidths, &widthsArray)) {
-            NSUInteger length = CGPDFArrayGetCount(widthsArray);
-            int idx = 0;
-            CGPDFObjectRef nextObject = nil;
-            
-            while (idx < length)
-            {
-                CGPDFInteger baseCid = 0;
-                CGPDFArrayGetInteger(widthsArray, idx++, &baseCid);
-                
-                CGPDFObjectRef integerOrArray = nil;
-                CGPDFInteger firstCharacter = 0;
-                CGPDFArrayGetObject(widthsArray, idx++, &integerOrArray);
-                
-                if (CGPDFObjectGetType(integerOrArray) == kCGPDFObjectTypeInteger)
-                {
-                    // [ first last width ]
-                    CGPDFInteger maxCid;
-                    CGPDFInteger glyphWidth;
-                    CGPDFObjectGetValue(integerOrArray, kCGPDFObjectTypeInteger, &maxCid);
-                    CGPDFArrayGetInteger(widthsArray, idx++, &glyphWidth);
-                    [self setWidthsFrom:baseCid to:maxCid width:glyphWidth];
-                    
-                    // If the second item is an array, the sequence
-                    // defines widths on the form [ first list-of-widths ]
-                    CGPDFArrayRef characterWidths;
-                    
-                    if (!CGPDFObjectGetValue(nextObject, kCGPDFObjectTypeArray, &characterWidths))
-                    {
-                        break;
-                    }
-                    
-                    NSUInteger widthsCount = CGPDFArrayGetCount(characterWidths);
-                    
-                    for (int index = 0; index < widthsCount ; index++)
-                    {
-                        CGPDFInteger width;
-                        
-                        if (CGPDFArrayGetInteger(characterWidths, index, &width))
-                        {
-                            NSNumber *key = [NSNumber numberWithInt: (int)firstCharacter + index];
-                            NSNumber *val = [NSNumber numberWithInt: (int)width];
-                            [widths setObject:val forKey:key];
-                        }
-                    }
-                }
-                else
-                {
-                    // [ first list-of-widths ]
-                    CGPDFArrayRef glyphWidths;
-                    CGPDFObjectGetValue(integerOrArray, kCGPDFObjectTypeArray, &glyphWidths);
-                    [self setWidthsWithBase:baseCid array:glyphWidths];
-                }
-            }
-        }
-        
-//        CGPDFInteger defaultWidthValue;
-//        if (CGPDFDictionaryGetInteger(fontDict, "DW", &defaultWidthValue)) {
-//            defaultWidth = defaultWidthValue;
-//        }
-    }
-    return self;
-}
-
-- (instancetype)initWithName:(NSString *)name defaultWidth:(CGFloat)defWidth widths:(NSMutableDictionary *)allWidths {
-    if (self = [super init]) {
-        _name = name;
-        defaultWidth = defWidth;
-        widths = allWidths;
     }
     return self;
 }
@@ -285,11 +212,6 @@ typedef enum {
 
 #pragma mark - Base
 
-- (void)setWidthsFrom:(CGPDFInteger)cid to:(CGPDFInteger)maxCid width:(CGPDFInteger)width {
-    while (cid <= maxCid) {
-        [widths setObject:[NSNumber numberWithInt:(int)width] forKey:[NSNumber numberWithInt:(int)cid++]];
-    }
-}
 
 #pragma mark Encoding
 - (void)setEncodingNamed:(NSString *)encodingName {
@@ -554,33 +476,6 @@ CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderSta
 }
 
 #pragma mark - Helpers
-
-- (void)setWidthsWithBase:(CGPDFInteger)base array:(CGPDFArrayRef)array {
-    NSInteger count = CGPDFArrayGetCount(array);
-    CGPDFInteger width;
-    
-    for (int index = 0; index < count ; index++) {
-        if (CGPDFArrayGetInteger(array, index, &width)) {
-            [widths setObject:[NSNumber numberWithInt:(int)width] forKey:[NSNumber numberWithInt:(int)base + index]];
-        }
-    }
-}
-
-- (CGPDFReal) getRealForDict:(CGPDFDictionaryRef)dictRef forKey:(const char*)key {
-    CGPDFReal result;
-    if (CGPDFDictionaryGetNumber(dictRef, key, &result)) {
-        NSLog(@"Get real %s = %f", key, result);
-        return result;
-    }
-    return 0;
-}
-
-#pragma mark - Copying
-- (id)copyWithZone:(NSZone *)zone {
-    
-    PDFFont *copy = [[PDFFont alloc] initWithName:_name defaultWidth:defaultWidth widths:widths];
-    return copy;
-}
 
 #pragma mark - 
 - (NSUInteger)hash {

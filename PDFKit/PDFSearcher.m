@@ -119,22 +119,6 @@ void printPDFObject(CGPDFObjectRef pdfObject);
 
 #pragma mark - Public
 
--(BOOL)page:(CGPDFPageRef)inPage containsString:(NSString *)inSearchString;
-{
-    [self fontCollectionWithPage:inPage];
-    
-    CGPDFContentStreamRef contentStream = CGPDFContentStreamCreateWithPage(inPage);
-    CGPDFScannerRef scanner = CGPDFScannerCreate(contentStream, table, (__bridge void * _Nullable)(self));
-    bool ret = CGPDFScannerScan(scanner);
-    CGPDFScannerRelease(scanner);
-    CGPDFContentStreamRelease(contentStream);
-    
-    searchStr = [inSearchString uppercaseString];
-//    NSLog(@"%@", fontInfo);
-    NSLog(@"%@", _unicodeContent);
-    return ret && ([[_unicodeContent uppercaseString] rangeOfString:[inSearchString uppercaseString]].location != NSNotFound);
-}
-
 - (NSArray<NSValue *> *)searchString:(NSString *)inSearchString inPage:(CGPDFPageRef)inPage {
     searchResults = [NSMutableArray new];
     searchStr = [inSearchString uppercaseString];

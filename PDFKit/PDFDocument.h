@@ -16,10 +16,8 @@
 
 - (instancetype __nullable)initWithData:(NSData* __nonnull)pdfData;
 
+
 - (NSArray <NSValue*> * __nonnull) searchText:(NSString * __nonnull)text onPage:(NSUInteger)pageNumber;
-
 - (ReaderContentView* __nullable) viewForPageNumber:(NSInteger)pageNumber;
-
-//- (NSArray<PDFFont*>*) getFontsForPageNumber:(NSInteger)pageNumber;
 
 @end
