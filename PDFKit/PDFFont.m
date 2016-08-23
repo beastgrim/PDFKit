@@ -85,7 +85,6 @@ typedef enum {
                 ToUnicodeMapper *mapper = [[ToUnicodeMapper alloc] initWithData:data];
                 
                 if (mapper) {
-                    NSLog(@"\n\nDID HANDLE FONT: [%@]\n\nMapData: %@\nMAP: %@", name, [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding], mapper.map);
                     _mapper = mapper;
                 }
             }
@@ -138,7 +137,7 @@ typedef enum {
         
         CGPDFDictionaryRef fontDecriptor;
         if (CGPDFDictionaryGetDictionary(fontDict, kFontDescriptorKey, &fontDecriptor)) {
-            
+            /* for future use
             CGPDFReal XHeight;
             if (CGPDFDictionaryGetNumber(fontDecriptor, kXHeight, &XHeight)) {
                 NSLog(@"XHeight %f", XHeight);
@@ -150,11 +149,11 @@ typedef enum {
             CGPDFReal CapHeight;
             if (CGPDFDictionaryGetNumber(fontDecriptor, kCapHeight, &CapHeight)) {
                 NSLog(@"CapHeight %f", CapHeight);
-            }
+            } */
             CGPDFArrayRef FontBBox;
             if (CGPDFDictionaryGetArray(fontDecriptor, kFontBBox, &FontBBox)) {
                 size_t count = CGPDFArrayGetCount(FontBBox);
-                NSLog(@"FontBBox %zu", count);
+
                 _fontBBox.size = count;
                 _fontBBox.values = malloc(sizeof(CGPDFInteger)*count);
                 for (size_t i = 0; i < count; i++) {
@@ -164,7 +163,7 @@ typedef enum {
                 }
             }
 
-            /*
+            /* for future use
             CGPDFStringRef charSet;
             if (CGPDFDictionaryGetString(fontDecriptor, kCharSetKey, &charSet)) {
                 
@@ -177,12 +176,10 @@ typedef enum {
         
         CGPDFInteger FirstChar;
         if (CGPDFDictionaryGetInteger(fontDict, kFirstChar, &FirstChar)) {
-            NSLog(@"FirstChar %ld", FirstChar);
             _firstChar = FirstChar;
         }
         CGPDFInteger LastChar;
         if (CGPDFDictionaryGetInteger(fontDict, kLastChar, &LastChar)) {
-            NSLog(@"LastChar %ld", LastChar);
             _lastChar = LastChar;
         }
         
@@ -190,7 +187,6 @@ typedef enum {
         CGPDFArrayRef Widths;
         if (CGPDFDictionaryGetArray(fontDict, kWidths, &Widths)) {
             size_t count = CGPDFArrayGetCount(Widths);
-            NSLog(@"Widths %zu", count);
             _widths.size = count;
             _widths.values = malloc(sizeof(CGPDFInteger)*count);
             for (size_t i = 0; i < count; i++) {
@@ -320,10 +316,11 @@ typedef enum {
 
 - (void)decodePDFString:(CGPDFStringRef)pdfString renderingState:(RenderingState*)renderingState callback:(void(^)(NSString * character, CGSize size))callback {
     
+    const unsigned char * characterCodes = CGPDFStringGetBytePtr(pdfString);
+    int count = CGPDFStringGetLength(pdfString);
+
     if (_mapper) {
         // Character codes
-        const unsigned char * characterCodes = CGPDFStringGetBytePtr(pdfString);
-        int count = CGPDFStringGetLength(pdfString);
 
         uint16_t code2 = characterCodes[1] + (characterCodes[0] << 8);  // 16 byte code
         
@@ -335,22 +332,23 @@ typedef enum {
             if (letter) {
                 CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
                 callback(letter, CGSizeMake(width, width));
-            } else {
+            } else if (count == 2) {
                 NSString *letter = _mapper.map[@(code2)];
                 CGPDFReal width = widthOfCharCode(code2, (__bridge void *)(self), (__bridge void *)(renderingState));
                 callback(letter, CGSizeMake(width, width));
                 return;
+            } else {
+                NSLog(@"UNKNOWN CODE %d", code);
+                callback(@"", CGSizeMake(0, 0));
             }
         }
+        return;
         
     } else if (_glifNameByCode) {
         
-        int length = CGPDFStringGetLength(pdfString);
-        const unsigned char * characterCodes = CGPDFStringGetBytePtr(pdfString);
-        
         NSDictionary *cirillicMap = [ToUnicodeMapper standardCyrillicGlyphNames];
         
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < count; i++) {
             uint8_t code = characterCodes[i];
             
             NSString *glif = _glifNameByCode[@(code)];
@@ -366,17 +364,27 @@ typedef enum {
                 }
                 
             } else {
-                NSLog(@"UNCNOWN CODE %d", code);
+                NSLog(@"UNKNOWN CODE %d", code);
                 CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
                 callback(@" ", CGSizeMake(width, width));
             }
         }
-        
         return;
+        
     }
 
-#warning English letters not handled
-//    return (NSString *)CFBridgingRelease(CGPDFStringCopyTextString(pdfString));
+    for (int i = 0; i < count; i++) {
+        uint8_t code = characterCodes[i];
+        CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
+        
+        if (code == 32) {
+            callback(@" ", CGSizeMake(width, width));
+        } else {
+//            NSLog(@"UNKNOWN CODE %d", code);
+            NSString *letter = (NSString *)CFBridgingRelease(CGPDFStringCopyTextString(pdfString));
+            callback(letter, CGSizeMake(width, width));
+        }
+    }
 }
 
 CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderState) {
@@ -402,7 +410,11 @@ CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderSta
         
         CGPDFReal Tfs = renderingState.fontSize;
         CGPDFReal Tc = renderingState.characterSpacing;
-        CGPDFReal Tw = code == 32 ? renderingState.wordSpacing : 0; // Word spacing works the same way as character spacing, but applies only to the space character, code 32.
+        
+        CGPDFReal Tw = 0.0;
+        if (code == 32) {
+            Tw = renderingState.wordSpacing; // Word spacing works the same way as character spacing, but applies only to the space character, code 32.
+        }
         CGPDFReal Th = renderingState.horizontalScaling / 100.0;
         CGPDFReal width = (w0*Tfs + Tc + Tw)*Th;
         
@@ -415,7 +427,7 @@ CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderSta
 //        }
         return width;
     } else {
-        NSLog(@"ERROR: get char width index: %zu, charCode %d widthLength %zu", charIndex, code, countCodes);
+        NSLog(@"ERROR: get char width index: %zu, charCode %d widthsLength %zu", charIndex, code, countCodes);
         return 0;
     }
 }
@@ -514,7 +526,7 @@ CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderSta
 
             } else {
                 
-                NSLog(@"UNCNOWN CODE %d", code);
+                NSLog(@"UNKNOWN CODE %d", code);
                 [string appendFormat:@" "];
             }
         }

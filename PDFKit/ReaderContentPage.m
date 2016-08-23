@@ -534,7 +534,7 @@
 	}
 
     CGRect frame = CGContextGetClipBoundingBox(context);
-    NSLog(@"PDFReader @frame = %@", NSStringFromCGRect(frame));
+//    NSLog(@"PDFReader @frame = %@", NSStringFromCGRect(frame));
 
 	CGContextSetRGBFillColor(context, 1.0f, 1.0f, 1.0f, 1.0f); // White
 	CGContextFillRect(context, frame); // Fill

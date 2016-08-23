@@ -24,6 +24,7 @@ void setTextLeading(CGPDFScannerRef pdfScanner, void *userInfo);
 
 void characterSpacing(CGPDFScannerRef pdfScanner, void *userInfo);
 void wordSpacing(CGPDFScannerRef pdfScanner, void *userInfo);
+void setRenderingMode(CGPDFScannerRef pdfScanner, void *userInfo);
 
 CGPDFStringRef getString(CGPDFScannerRef pdfScanner);
 CGPDFArrayRef getArray(CGPDFScannerRef pdfScanner);
@@ -92,12 +93,12 @@ void printPDFObject(CGPDFObjectRef pdfObject);
         CGPDFOperatorTableSetCallback(table, "Tz", setHorizontalScale); // Set the horizontal scaling, Th , to (scale  ̃ 100). scale is a number specifying the percentage of the normal width. Initial value: 100 (normal width).
         CGPDFOperatorTableSetCallback(table, "TL", setTextLeading); // Set the text leading, Tl , to leading, which is a number expressed in unscaled text space units. Text leading is used only by the T*, ', and " operators. Initial value: 0.
         CGPDFOperatorTableSetCallback(table, "Tf", fontInfoCallback);   // Set the text font, Tf , to font and the text font size, Tfs , to size. font is the name of a font resource in the Font subdictionary of the current resource dictionary; size is a number representing a scale factor. There is no initial value for either font or size; they must be specified explicitly using Tf before any text is shown.
-        CGPDFOperatorTableSetCallback(table, "Tr", test);   // Set the text rendering mode, Tmode , to render, which is an integer. Initial value: 0.
+        CGPDFOperatorTableSetCallback(table, "Tr", setRenderingMode);   // Set the text rendering mode, Tmode , to render, which is an integer. Initial value: 0.
         CGPDFOperatorTableSetCallback(table, "Ts", setTextRise);    // Set the text rise, Trise , to rise, which is a number expressed in unscaled text space units. Initial value: 0.
 
         // Clipping paths
-        CGPDFOperatorTableSetCallback(table, "W", test);
-        CGPDFOperatorTableSetCallback(table, "W*", test);
+//        CGPDFOperatorTableSetCallback(table, "W", test);
+//        CGPDFOperatorTableSetCallback(table, "W*", test);
 
         // Type 3 fonts
         CGPDFOperatorTableSetCallback(table, "d0", test);
@@ -246,10 +247,10 @@ void handleFontDictionary(const char *key, CGPDFObjectRef ob, void *info) {
         NSLog(@"ERROR GET FONT DICT");
         return;
     }
-    
+    /*
     NSLog(@"PRINT FONT: %s", key);
     printPDFObject(ob);
-    
+    */
     NSString *fontName = [NSString stringWithFormat:@"%s", key];
     PDFFont *font = [[PDFFont alloc] initWithName:fontName fontDict:fontDict];
     searcher.fontByFontName[fontName] = font;
@@ -271,6 +272,7 @@ void newLineSetLeading(CGPDFScannerRef inScanner, void *userInfo) {
     CGPDFReal tx, ty;
     CGPDFScannerPopNumber(inScanner, &ty);
     CGPDFScannerPopNumber(inScanner, &tx);
+    NSLog(@"newLineSetLeading %f:%f", tx, ty);
     [searcher.renderingState newLineWithLeading:-ty indent:tx save:YES];
 }
 
@@ -280,6 +282,7 @@ void newLineWithLeading(CGPDFScannerRef inScanner, void *userInfo) {
     CGPDFReal tx, ty;
     CGPDFScannerPopNumber(inScanner, &ty);
     CGPDFScannerPopNumber(inScanner, &tx);
+    NSLog(@"newLineWithLeading %f:%f", tx, ty);
     [searcher.renderingState newLineWithLeading:-ty indent:tx save:NO];
 }
 
@@ -287,9 +290,9 @@ void textMatrixCallback(CGPDFScannerRef inScanner, void *userInfo) {
     PDFSearcher * searcher = (__bridge PDFSearcher *)userInfo;
     
     CGAffineTransform transform = getTransform(inScanner);
+    CGAffineTransform tf = CGAffineTransformConcat(transform, searcher.renderingState.ctm);
 
-    NSLog(@"textMatrixCallback %f:%f", transform.tx, transform.ty);
-    [searcher.renderingState setTextMatrix:transform replaceLineMatrix:YES];
+    [searcher.renderingState setTextMatrix:tf replaceLineMatrix:YES];
 }
 
 #pragma mark Font info
@@ -302,9 +305,8 @@ void fontInfoCallback(CGPDFScannerRef inScanner, void *userInfo)
     const char *fontName;
     CGPDFScannerPopNumber(inScanner, &fontSize);
     CGPDFScannerPopName(inScanner, &fontName);
-    NSLog(@"Font: %s size: %f", fontName, fontSize);
+//    NSLog(@"Font: %s size: %f", fontName, fontSize);
     
-//    [searcher.unicodeContent appendFormat:@"[%s]", fontName];
     searcher->currentFontName = [NSString stringWithFormat:@"%s", fontName];
     searcher.renderingState.fontSize = fontSize;
 }
@@ -315,10 +317,6 @@ void startTextCallback(CGPDFScannerRef inScanner, void *userInfo) {
 }
 
 void endTextCallback(CGPDFScannerRef inScanner, void *userInfo) {
-    static int count;
-    count++;
-    NSLog(@"Number endTextCallback %d", count);
-//    PDFSearcher * searcher = (PDFSearcher *)userInfo;
 
 }
 
@@ -379,7 +377,7 @@ void wordSpacing(CGPDFScannerRef pdfScanner, void *userInfo)
     [searcher.renderingState setWordSpacing:getNumber(pdfScanner)];
 }
 
-#pragma mark - Text Position Work
+#pragma mark - Text Position Helpers
 - (void)setTextMatrix:(CGAffineTransform)matrix replaceLineMatrix:(BOOL)replace {
     self.renderingState.textMatrix = matrix;
     if (replace) {
@@ -411,9 +409,10 @@ void popRenderingState(CGPDFScannerRef pdfScanner, void *userInfo)
 void applyTransformation(CGPDFScannerRef pdfScanner, void *userInfo)
 {
     PDFSearcher *searcher = (__bridge PDFSearcher *)userInfo;
-    
     RenderingState *state = searcher.renderingState;
-    state.ctm = CGAffineTransformConcat(getTransform(pdfScanner), state.ctm);
+    
+    CGAffineTransform tf = getTransform(pdfScanner);
+    state.ctm = tf;
 }
 
 void printStringNewLine(CGPDFScannerRef pdfScanner, void *userInfo) {
@@ -448,10 +447,18 @@ void setTextRise(CGPDFScannerRef pdfScanner, void *userInfo) {
     [searcher.renderingState setTextRise:getNumber(pdfScanner)];
 }
 
+void setRenderingMode(CGPDFScannerRef pdfScanner, void *userInfo) {
+    CGPDFInteger mode;
+    CGPDFScannerPopInteger(pdfScanner, &mode);
+    
+    NSLog(@"Rendering mode is %ld", mode);
+}
+
+
+#pragma mark - Not emplemented
 void test(CGPDFScannerRef pdfScanner, void *userInfo) {
 //    PDFSearcher *searcher = (__bridge PDFSearcher *)userInfo;
     NSLog(@"Warning: Test callback not emplemented");
-//    [searcher.renderingState setTextRise:getNumber(pdfScanner)];
 }
 
 #pragma mark - Helpers
@@ -613,7 +620,7 @@ CGAffineTransform getTransform(CGPDFScannerRef pdfScanner) {
     transform.c = popNumber(pdfScanner);
     transform.b = popNumber(pdfScanner);
     transform.a = popNumber(pdfScanner);
-//    NSLog(@"Transform x:%f y:%f a:%f b:%f c:%f d:%f", transform.ty, transform.tx, transform.a, transform.b, transform.c, transform.d);
+
     return transform;
 }
 

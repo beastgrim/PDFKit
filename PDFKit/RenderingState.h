@@ -43,6 +43,7 @@
 @property (nonatomic, assign) CGFloat leadning;
 @property (nonatomic, assign) CGFloat textRise;
 @property (nonatomic, assign) CGFloat horizontalScaling;
+@property (nonatomic, assign) CGFloat mode;
 
 /* Font and font size */
 @property (nonatomic, retain) PDFFont *font;
