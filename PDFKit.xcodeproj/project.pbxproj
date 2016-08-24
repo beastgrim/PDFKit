@@ -33,7 +33,6 @@
 		9031ADC01D265BC100CB04AE /* PDFFont.m in Sources */ = {isa = PBXBuildFile; fileRef = 9031ADBF1D265BC100CB04AE /* PDFFont.m */; };
 		904CE53C1D4A5D1B0097ACA2 /* unsearch.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 904CE53B1D4A5D1B0097ACA2 /* unsearch.pdf */; };
 		90587D2D1D5B158500C16FF8 /* failsearch.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 90587D2C1D5B158500C16FF8 /* failsearch.pdf */; };
-		908118021D621BE600CD4FC9 /* Untitled.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 908118011D621BE600CD4FC9 /* Untitled.pdf */; };
 		90DA1DC51D1C48EB00519EE9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DA1DC41D1C48EB00519EE9 /* AppDelegate.swift */; };
 		90DA1DC71D1C48EB00519EE9 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DA1DC61D1C48EB00519EE9 /* ViewController.swift */; };
 		90DA1DCA1D1C48EB00519EE9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 90DA1DC81D1C48EB00519EE9 /* Main.storyboard */; };
@@ -41,10 +40,11 @@
 		90DA1DCF1D1C48EB00519EE9 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 90DA1DCD1D1C48EB00519EE9 /* LaunchScreen.storyboard */; };
 		90DA1DDA1D1C48EB00519EE9 /* PDFKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DA1DD91D1C48EB00519EE9 /* PDFKitTests.swift */; };
 		90DA1DE81D1C499800519EE9 /* PDFSearcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 90DA1DE71D1C499800519EE9 /* PDFSearcher.m */; };
-		90DA1DEB1D1C49F600519EE9 /* test_simple.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 90DA1DEA1D1C49F600519EE9 /* test_simple.pdf */; };
 		90DA1DED1D1C4A8900519EE9 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90DA1DEC1D1C4A8900519EE9 /* CoreGraphics.framework */; };
 		90DA1DF01D1C4E7000519EE9 /* PDFDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 90DA1DEF1D1C4E7000519EE9 /* PDFDocument.m */; };
 		90DA1DF61D1C590E00519EE9 /* ToUnicodeMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DA1DF51D1C590E00519EE9 /* ToUnicodeMapper.swift */; };
+		90ED23971D6C99050037D92B /* crash.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 90ED23961D6C99050037D92B /* crash.pdf */; };
+		90ED23991D6D900B0037D92B /* check.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 90ED23981D6D900B0037D92B /* check.pdf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -91,7 +91,6 @@
 		9031ADBF1D265BC100CB04AE /* PDFFont.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDFFont.m; sourceTree = "<group>"; };
 		904CE53B1D4A5D1B0097ACA2 /* unsearch.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = unsearch.pdf; sourceTree = "<group>"; };
 		90587D2C1D5B158500C16FF8 /* failsearch.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = failsearch.pdf; sourceTree = "<group>"; };
-		908118011D621BE600CD4FC9 /* Untitled.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = Untitled.pdf; sourceTree = "<group>"; };
 		90DA1DC11D1C48EB00519EE9 /* PDFKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PDFKit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		90DA1DC41D1C48EB00519EE9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		90DA1DC61D1C48EB00519EE9 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -105,12 +104,13 @@
 		90DA1DE51D1C499700519EE9 /* PDFKit-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "PDFKit-Bridging-Header.h"; sourceTree = "<group>"; };
 		90DA1DE61D1C499800519EE9 /* PDFSearcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDFSearcher.h; sourceTree = "<group>"; };
 		90DA1DE71D1C499800519EE9 /* PDFSearcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDFSearcher.m; sourceTree = "<group>"; };
-		90DA1DEA1D1C49F600519EE9 /* test_simple.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = test_simple.pdf; sourceTree = "<group>"; };
 		90DA1DEC1D1C4A8900519EE9 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		90DA1DEE1D1C4E7000519EE9 /* PDFDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDFDocument.h; sourceTree = "<group>"; };
 		90DA1DEF1D1C4E7000519EE9 /* PDFDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDFDocument.m; sourceTree = "<group>"; };
 		90DA1DF41D1C531700519EE9 /* PDFKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PDFKit.h; sourceTree = "<group>"; };
 		90DA1DF51D1C590E00519EE9 /* ToUnicodeMapper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ToUnicodeMapper.swift; sourceTree = "<group>"; };
+		90ED23961D6C99050037D92B /* crash.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = crash.pdf; sourceTree = "<group>"; };
+		90ED23981D6D900B0037D92B /* check.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = check.pdf; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -175,11 +175,11 @@
 			isa = PBXGroup;
 			children = (
 				90DA1DEC1D1C4A8900519EE9 /* CoreGraphics.framework */,
-				90DA1DEA1D1C49F600519EE9 /* test_simple.pdf */,
 				903043131D24268F0060290E /* test.pdf */,
-				908118011D621BE600CD4FC9 /* Untitled.pdf */,
 				904CE53B1D4A5D1B0097ACA2 /* unsearch.pdf */,
 				90587D2C1D5B158500C16FF8 /* failsearch.pdf */,
+				90ED23961D6C99050037D92B /* crash.pdf */,
+				90ED23981D6D900B0037D92B /* check.pdf */,
 				90DA1DC31D1C48EB00519EE9 /* PDFKit */,
 				90DA1DD81D1C48EB00519EE9 /* PDFKitTests */,
 				90DA1DC21D1C48EB00519EE9 /* Products */,
@@ -329,7 +329,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				900B6A961D674EED0027B710 /* Symbol.afm in Resources */,
-				90DA1DEB1D1C49F600519EE9 /* test_simple.pdf in Resources */,
 				90DA1DCF1D1C48EB00519EE9 /* LaunchScreen.storyboard in Resources */,
 				900B6A9B1D674EED0027B710 /* ZapfDingbats.afm in Resources */,
 				900B6A931D674EED0027B710 /* Helvetica-Oblique.afm in Resources */,
@@ -339,10 +338,11 @@
 				900B6A8F1D674EED0027B710 /* Courier-Oblique.afm in Resources */,
 				900B6A8E1D674EED0027B710 /* Courier-BoldOblique.afm in Resources */,
 				900B6A951D674EED0027B710 /* MustRead.html in Resources */,
+				90ED23971D6C99050037D92B /* crash.pdf in Resources */,
 				90587D2D1D5B158500C16FF8 /* failsearch.pdf in Resources */,
 				90DA1DCC1D1C48EB00519EE9 /* Assets.xcassets in Resources */,
+				90ED23991D6D900B0037D92B /* check.pdf in Resources */,
 				90DA1DCA1D1C48EB00519EE9 /* Main.storyboard in Resources */,
-				908118021D621BE600CD4FC9 /* Untitled.pdf in Resources */,
 				904CE53C1D4A5D1B0097ACA2 /* unsearch.pdf in Resources */,
 				900B6A9A1D674EED0027B710 /* Times-Roman.afm in Resources */,
 				903043141D24268F0060290E /* test.pdf in Resources */,

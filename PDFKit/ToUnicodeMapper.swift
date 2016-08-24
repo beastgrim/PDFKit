@@ -158,7 +158,11 @@ class ToUnicodeMapper: NSObject {
                     
                     var count = 0
                     for i in startIndex...endIndex {
-                        self.map[i] = "\(Character(UnicodeScalar(uniChar+count)))"
+                        if uniChar+count < Int(UInt16.max) {
+                            self.map[i] = "\(Character(UnicodeScalar(uniChar+count)))"
+                        } else {
+                            NSLog("error: value is outside of Unicode codespace")
+                        }
                         count += 1
                     }
                 } else {
@@ -186,8 +190,11 @@ class ToUnicodeMapper: NSObject {
                     let unicodeStr = (line as NSString).substringWithRange(NSMakeRange(results[1].range.location+1, results[1].range.length-2))
                     let uniChar = strtol(unicodeStr, nil, 16)
                     
-                    self.map[code] = "\(Character(UnicodeScalar(uniChar)))"
-                    
+                    if uniChar < Int(UInt16.max) {
+                        self.map[code] = "\(Character(UnicodeScalar(uniChar)))"
+                    } else {
+                        NSLog("error: value is outside of Unicode codespace")
+                    }
                 } else {
                     continue
                 }

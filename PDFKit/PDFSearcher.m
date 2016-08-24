@@ -121,18 +121,20 @@ void printPDFObject(CGPDFObjectRef pdfObject);
 
 - (NSArray<NSValue *> *)searchString:(NSString *)inSearchString inPage:(CGPDFPageRef)inPage {
     searchResults = [NSMutableArray new];
-    searchStr = [inSearchString uppercaseString];
-    searchLength = searchStr.length;
-    CGRect cropBoxRect = CGPDFPageGetBoxRect(inPage, kCGPDFCropBox);
-    pageSize = cropBoxRect.size;
-    
-    [self fontCollectionWithPage:inPage];
-    
-    CGPDFContentStreamRef contentStream = CGPDFContentStreamCreateWithPage(inPage);
-    CGPDFScannerRef scanner = CGPDFScannerCreate(contentStream, table, (__bridge void * _Nullable)(self));
-    CGPDFScannerScan(scanner);
-    CGPDFScannerRelease(scanner);
-    CGPDFContentStreamRelease(contentStream);
+    if (inSearchString.length > 0) {
+        searchStr = [inSearchString uppercaseString];
+        searchLength = searchStr.length;
+        CGRect cropBoxRect = CGPDFPageGetBoxRect(inPage, kCGPDFCropBox);
+        pageSize = cropBoxRect.size;
+        
+        [self fontCollectionWithPage:inPage];
+        
+        CGPDFContentStreamRef contentStream = CGPDFContentStreamCreateWithPage(inPage);
+        CGPDFScannerRef scanner = CGPDFScannerCreate(contentStream, table, (__bridge void * _Nullable)(self));
+        CGPDFScannerScan(scanner);
+        CGPDFScannerRelease(scanner);
+        CGPDFContentStreamRelease(contentStream);
+    }
     
     return searchResults;
 }
@@ -256,7 +258,6 @@ void newLineSetLeading(CGPDFScannerRef inScanner, void *userInfo) {
     CGPDFReal tx, ty;
     CGPDFScannerPopNumber(inScanner, &ty);
     CGPDFScannerPopNumber(inScanner, &tx);
-    NSLog(@"newLineSetLeading %f:%f", tx, ty);
     [searcher.renderingState newLineWithLeading:-ty indent:tx save:YES];
 }
 
@@ -266,7 +267,6 @@ void newLineWithLeading(CGPDFScannerRef inScanner, void *userInfo) {
     CGPDFReal tx, ty;
     CGPDFScannerPopNumber(inScanner, &ty);
     CGPDFScannerPopNumber(inScanner, &tx);
-    NSLog(@"newLineWithLeading %f:%f", tx, ty);
     [searcher.renderingState newLineWithLeading:-ty indent:tx save:NO];
 }
 
@@ -435,7 +435,7 @@ void setRenderingMode(CGPDFScannerRef pdfScanner, void *userInfo) {
     CGPDFInteger mode;
     CGPDFScannerPopInteger(pdfScanner, &mode);
     
-    NSLog(@"Rendering mode is %ld", mode);
+//    NSLog(@"Rendering mode is %ld", mode);
 }
 
 
