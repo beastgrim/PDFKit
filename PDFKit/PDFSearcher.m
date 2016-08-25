@@ -233,10 +233,10 @@ void handleFontDictionary(const char *key, CGPDFObjectRef ob, void *info) {
         NSLog(@"ERROR GET FONT DICT");
         return;
     }
-    /*
+
     NSLog(@"PRINT FONT: %s", key);
     printPDFObject(ob);
-    */
+
     NSString *fontName = [NSString stringWithFormat:@"%s", key];
     PDFFont *font = [[PDFFont alloc] initWithName:fontName fontDict:fontDict];
     searcher.fontByFontName[fontName] = font;

@@ -31,7 +31,7 @@ class ViewController: UIViewController {
     private func openTestPDF() {
 //        guard let pdfPath = NSBundle.mainBundle().pathForResource("Untitled", ofType: "pdf") else {
 //        guard let pdfPath = NSBundle.mainBundle().pathForResource("unsearch", ofType: "pdf") else {
-        guard let pdfPath = NSBundle.mainBundle().pathForResource("crash", ofType: "pdf") else {
+        guard let pdfPath = NSBundle.mainBundle().pathForResource("check", ofType: "pdf") else {
             return
         }
         guard let pdfData = NSData(contentsOfFile: pdfPath) else {
@@ -41,14 +41,14 @@ class ViewController: UIViewController {
             return
         }
         
-        let pageIndex = 47
+        let pageIndex = 2
         
         if let pdfPageView = document.viewForPageNumber(pageIndex) {
             drawResultsView.pageSize = pdfPageView.bounds.size;
             view.addSubview(pdfPageView)
         }
 
-        let results = document.searchText("на", onPage: UInt(pageIndex))
+        let results = document.searchText("пер", onPage: UInt(pageIndex))
         
         view.bringSubviewToFront(drawResultsView)
         drawResultsView.layer.borderWidth = 2

@@ -170,7 +170,9 @@ class ToUnicodeMapper: NSObject {
                 }
             }
             
-        } else if let start = fontMap.rangeOfString("beginbfchar"), let stop = fontMap.rangeOfString("endbfchar") {
+        }
+        
+        if let start = fontMap.rangeOfString("beginbfchar"), let stop = fontMap.rangeOfString("endbfchar") {
             
             var data = fontMap.substringToIndex(stop.startIndex)
             data = data.substringFromIndex(start.endIndex)

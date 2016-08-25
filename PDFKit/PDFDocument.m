@@ -28,15 +28,15 @@
 
 - (NSArray <NSValue*>*)searchText:(NSString *)text onPage:(NSUInteger)pageNumber {
     PDFSearcher *searh = [PDFSearcher new];
-    NSMutableArray <NSValue*>*results = [NSMutableArray new];
+    NSArray <NSValue*>*results;
     
     if (pageNumber < _numberOfPages) {
         CGPDFPageRef page = [self pageWithIndex:pageNumber];
-        return [searh searchString:text inPage:page];
+        results = [searh searchString:text inPage:page];
+        NSLog(@"Searcher find text: %@", searh.unicodeContent);
     }
     
-    NSLog(@"Searcher find text: %@", searh.unicodeContent);
-    return results;
+    return results ?: @[];
 }
 
 - (CGPDFPageRef)pageWithIndex:(NSInteger)index {

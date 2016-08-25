@@ -28,6 +28,8 @@ const char *kWidths = "Widths"; // (Required except for the standard 14 fonts; i
 const char *kFirstChar = "FirstChar"; // (Required except for the standard 14 fonts) The first character code defined in the font’s Widths array.
 const char *kLastChar = "LastChar"; // (Required except for the standard 14 fonts) The last character code defined in the font’s Widths array.
 
+const char *kFontFile3 = "FontFile3";
+
 
 typedef enum {
     UnknownEncoding = 0,
@@ -135,6 +137,22 @@ typedef enum {
         
         CGPDFDictionaryRef fontDecriptor;
         if (CGPDFDictionaryGetDictionary(fontDict, kFontDescriptorKey, &fontDecriptor)) {
+            // try get Font File stream
+            CGPDFObjectRef FontFile;
+            if (CGPDFDictionaryGetObject(fontDecriptor, kFontFile3, &FontFile)) {
+                
+                CGPDFStreamRef FontFileStream;
+                if (CGPDFObjectGetValue(toUnicodeObj, kCGPDFObjectTypeStream, &FontFileStream)) {
+                    
+                    CFDataRef dataRef = CGPDFStreamCopyData(FontFileStream, NULL);
+                    NSData *data = (__bridge NSData*)dataRef;
+                    ToUnicodeMapper *mapper = [[ToUnicodeMapper alloc] initWithData:data];
+                    _mapper = mapper;
+
+//                    NSLog(@"FontFile stream: %@", [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding]);
+                }
+            }
+            
             /* for future use
             CGPDFReal XHeight;
             if (CGPDFDictionaryGetNumber(fontDecriptor, kXHeight, &XHeight)) {
@@ -240,73 +258,51 @@ typedef enum {
     
     const unsigned char * characterCodes = CGPDFStringGetBytePtr(pdfString);
     int count = CGPDFStringGetLength(pdfString);
-
-    if (_mapper) {
-        // Character codes
-
-        uint16_t code2 = characterCodes[1] + (characterCodes[0] << 8);  // 16 byte code
-        
-        for (int i = 0; i < count; i++) {
-            
-            char code = characterCodes[i];
-            
-            NSString *letter = _mapper.map[@(code)];
-            if (letter) {
-                CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
-                callback(letter, CGSizeMake(width, width));
-            } else if (count == 2) {
-                NSString *letter = _mapper.map[@(code2)];
-                CGPDFReal width = widthOfCharCode(code2, (__bridge void *)(self), (__bridge void *)(renderingState));
-                callback(letter, CGSizeMake(width, width));
-                return;
-            } else {
-                NSLog(@"UNKNOWN CODE %d", code);
-                callback(@"", CGSizeMake(0, 0));
-            }
-        }
-        return;
-        
-    } else if (_glifNameByCode) {
-        
-        NSDictionary *cirillicMap = [ToUnicodeMapper standardCyrillicGlyphNames];
-        
-        for (int i = 0; i < count; i++) {
-            uint8_t code = characterCodes[i];
-            
-            NSString *glif = _glifNameByCode[@(code)];
-            
-            if (glif) {
-                if (glif.length == 1) {
-                    CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
-                    callback(glif, CGSizeMake(width, width));
-                } else {
-                    NSString *letter = cirillicMap[glif] ?: @"?";
-                    CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
-                    callback(letter, CGSizeMake(width, width));
-                }
-                
-            } else {
-                NSLog(@"UNKNOWN CODE %d", code);
-                CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
-                callback(@" ", CGSizeMake(width, width));
-            }
-        }
-        return;
-        
-    }
+    NSDictionary *cirillicMap = [ToUnicodeMapper standardCyrillicGlyphNames];
 
     for (int i = 0; i < count; i++) {
-        uint8_t code = characterCodes[i];
-        CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
         
-        if (code == 32) {
-            callback(@" ", CGSizeMake(width, width));
-        } else {
-//            NSLog(@"UNKNOWN CODE %d", code);
-            NSString *letter = (NSString *)CFBridgingRelease(CGPDFStringCopyTextString(pdfString));
+        const unsigned char code = characterCodes[i];
+        const uint16_t code2 = characterCodes[1] + (characterCodes[0] << 8);  // 16 byte code
+
+        NSString *letter = _mapper.map[@(code)];
+        NSString *glif = _glifNameByCode[@(code)];
+        CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
+
+        if (letter) {
             callback(letter, CGSizeMake(width, width));
+            
+        } else if (glif) {
+            
+            if (glif.length == 1) {
+                callback(glif, CGSizeMake(width, width));
+            } else {
+                NSString *letter = cirillicMap[glif] ?: @" ";
+                callback(letter, CGSizeMake(width, width));
+            }
+        } else if (count == 2) {
+            
+            NSString *letter = _mapper.map[@(code2)];
+            if (letter) {
+                callback(letter, CGSizeMake(width, width));
+                return;
+            }
+        } else {
+            
+            if (code == 32) {
+                callback(@" ", CGSizeMake(width, width));
+            } else if (count == 1) {
+                NSString *letter = (NSString *)CFBridgingRelease(CGPDFStringCopyTextString(pdfString));
+                NSLog(@"WARNING CODE %d - '%@'", code, letter);
+                callback(letter, CGSizeMake(width, width));
+            } else {
+                NSString *letter = [NSString stringWithFormat:@"%c", characterCodes[i]];
+                NSLog(@"WARNING CODE %d - '%@'", code, letter);
+                callback(letter, CGSizeMake(width, width));
+            }
         }
     }
+    
 }
 
 CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderState) {
@@ -350,7 +346,7 @@ CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderSta
         return width;
     } else {
         NSLog(@"ERROR: get char width index: %zu, charCode %d widthsLength %zu", charIndex, code, countCodes);
-        return 0;
+        return 500;
     }
 }
 
