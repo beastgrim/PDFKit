@@ -14,6 +14,7 @@
 
 @property (nonatomic, readonly) NSInteger numberOfPages;
 
+- (instancetype __nullable)initWithCGPDFDocumentRef:(CGPDFDocumentRef __nonnull)newDocumentRef;
 - (instancetype __nullable)initWithData:(NSData* __nonnull)pdfData;
 
 

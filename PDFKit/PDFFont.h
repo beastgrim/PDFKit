@@ -18,6 +18,7 @@ struct CGPDFIntegerArray {
 
 typedef NS_ENUM (NSInteger, PDFFontType) {
     PDFFontTypeUnknown = 0,
+    PDFFontType0,
     PDFFontType1,
     PDFFontType2,
     PDFFontType3
@@ -40,11 +41,6 @@ typedef NS_ENUM (NSInteger, PDFFontType) {
 
 
 - (instancetype) initWithName:(NSString *)name fontDict:(CGPDFDictionaryRef)fontDict;
-
-- (CGPDFInteger) widthOfChar:(CGPDFInteger)charCode;
-- (CGPDFInteger) widthOfPDFString:(CGPDFStringRef)pdfString renderingState:(RenderingState*)renderingState;
-
-- (NSString *)stringWithPDFString:(CGPDFStringRef)pdfString;
 - (void)decodePDFString:(CGPDFStringRef)pdfString renderingState:(RenderingState*)renderingState callback:(void(^)(NSString * character, CGSize size))callback;
 
 @end

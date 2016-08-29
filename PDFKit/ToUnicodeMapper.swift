@@ -134,12 +134,13 @@ class ToUnicodeMapper: NSObject {
     }
     
     private func prepareData(fontMap: String) {
-        
-        if let start = fontMap.rangeOfString("beginbfrange"), let stop = fontMap.rangeOfString("endbfrange") {
-            var data = fontMap.substringToIndex(stop.startIndex)
-            data = data.substringFromIndex(start.endIndex)
-            data = data.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
 
+        var mapCopy = fontMap
+
+        while let start = mapCopy.rangeOfString("beginbfrange"), let end = mapCopy.rangeOfString("endbfrange") {
+            var data = mapCopy.substringWithRange(start.endIndex ..< end.startIndex)
+            data = data.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
+            
             let lines = data.componentsSeparatedByString("\n")
             let regex = try! NSRegularExpression(pattern: "<(\\w+)>", options: .CaseInsensitive)
             
@@ -170,12 +171,12 @@ class ToUnicodeMapper: NSObject {
                 }
             }
             
+            mapCopy = mapCopy.substringFromIndex(end.endIndex)
         }
         
-        if let start = fontMap.rangeOfString("beginbfchar"), let stop = fontMap.rangeOfString("endbfchar") {
-            
-            var data = fontMap.substringToIndex(stop.startIndex)
-            data = data.substringFromIndex(start.endIndex)
+        mapCopy = fontMap
+        while let start = mapCopy.rangeOfString("beginbfchar"), let end = mapCopy.rangeOfString("endbfchar") {
+            var data = mapCopy.substringWithRange(start.endIndex ..< end.startIndex)
             data = data.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
             
             let lines = data.componentsSeparatedByString("\n")
@@ -201,6 +202,8 @@ class ToUnicodeMapper: NSObject {
                     continue
                 }
             }
+            
+            mapCopy = mapCopy.substringFromIndex(end.endIndex)
         }
         
         map[0] = ""

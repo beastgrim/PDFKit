@@ -25,11 +25,27 @@ void setTextLeading(CGPDFScannerRef pdfScanner, void *userInfo);
 void characterSpacing(CGPDFScannerRef pdfScanner, void *userInfo);
 void wordSpacing(CGPDFScannerRef pdfScanner, void *userInfo);
 void setRenderingMode(CGPDFScannerRef pdfScanner, void *userInfo);
+void newLine(CGPDFScannerRef inScanner, void *userInfo);
+void newLineSetLeading(CGPDFScannerRef inScanner, void *userInfo);
+void newLineWithLeading(CGPDFScannerRef inScanner, void *userInfo);
+void startTextCallback(CGPDFScannerRef inScanner, void *userInfo);
+void pushRenderingState(CGPDFScannerRef pdfScanner, void *userInfo);
+void popRenderingState(CGPDFScannerRef pdfScanner, void *userInfo);
+void applyTransformation(CGPDFScannerRef pdfScanner, void *userInfo);
+void printStringNewLine(CGPDFScannerRef pdfScanner, void *userInfo);
+void setHorizontalScale(CGPDFScannerRef pdfScanner, void *userInfo);
+void setTextRise(CGPDFScannerRef pdfScanner, void *userInfo);
+void test(CGPDFScannerRef pdfScanner, void *userInfo);
+BOOL isSpace(float width, PDFSearcher *scanner);
+
 
 CGPDFStringRef getString(CGPDFScannerRef pdfScanner);
 CGPDFArrayRef getArray(CGPDFScannerRef pdfScanner);
 CGPDFObjectRef getObject(CGPDFArrayRef pdfArray, int index);
 CGPDFStringRef getStringValue(CGPDFObjectRef pdfObject);
+CGPDFReal getNumber(CGPDFScannerRef pdfScanner);
+CGPDFReal popNumber(CGPDFScannerRef pdfScanner);
+CGAffineTransform getTransform(CGPDFScannerRef pdfScanner);
 float getNumericalValue(CGPDFObjectRef pdfObject, CGPDFObjectType type);
 
 void printPDFObject(CGPDFObjectRef pdfObject);
@@ -37,8 +53,6 @@ void printPDFObject(CGPDFObjectRef pdfObject);
 @interface PDFSearcher ()
 
 @property (nonatomic, retain) NSMutableString *fontInfo;
-@property (nonatomic, retain) NSMutableSet <NSString*> *fontNames;
-@property (nonatomic, retain) NSMutableDictionary <NSString*, ToUnicodeMapper*> *mapperByFontName;
 @property (nonatomic, retain) NSMutableDictionary <NSString*, PDFFont*> *fontByFontName;
 
 @property (nonatomic, readonly) RenderingState *renderingState;
@@ -60,7 +74,7 @@ void printPDFObject(CGPDFObjectRef pdfObject);
     CGSize pageSize;
 }
 
-@synthesize fontInfo;
+@synthesize fontInfo, fontByFontName = _fontByFontName, renderingStateStack = _renderingStateStack, unicodeContent = _unicodeContent;
 
 - (instancetype) init {
     if (self = [super init]) {
@@ -68,8 +82,6 @@ void printPDFObject(CGPDFObjectRef pdfObject);
         table = CGPDFOperatorTableCreate();
         fontInfo = [NSMutableString stringWithUTF8String:"FONT INFO:\n"];
         _unicodeContent = [NSMutableString new];
-        _fontNames = [NSMutableSet new];
-        _mapperByFontName = [NSMutableDictionary new];
         _fontByFontName = [NSMutableDictionary new];
         _renderingStateStack = [NSMutableArray new];
         [_renderingStateStack addObject:[RenderingState new]];
@@ -234,8 +246,8 @@ void handleFontDictionary(const char *key, CGPDFObjectRef ob, void *info) {
         return;
     }
 
-    NSLog(@"PRINT FONT: %s", key);
-    printPDFObject(ob);
+//    NSLog(@"PRINT FONT: %s", key);
+//    printPDFObject(ob);
 
     NSString *fontName = [NSString stringWithFormat:@"%s", key];
     PDFFont *font = [[PDFFont alloc] initWithName:fontName fontDict:fontDict];
@@ -284,13 +296,12 @@ void fontInfoCallback(CGPDFScannerRef inScanner, void *userInfo)
 {
     PDFSearcher * searcher = (__bridge PDFSearcher *)userInfo;
     
-    
     CGPDFReal fontSize;
-    const char *fontName;
     CGPDFScannerPopNumber(inScanner, &fontSize);
+    const char *fontName;
     CGPDFScannerPopName(inScanner, &fontName);
 //    NSLog(@"Font: %s size: %f", fontName, fontSize);
-    
+//    [searcher.unicodeContent appendFormat:@"[%s]", fontName];
     searcher->currentFontName = [NSString stringWithFormat:@"%s", fontName];
     searcher.renderingState.fontSize = fontSize;
 }

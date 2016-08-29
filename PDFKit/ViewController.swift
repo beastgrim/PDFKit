@@ -30,8 +30,9 @@ class ViewController: UIViewController {
     
     private func openTestPDF() {
 //        guard let pdfPath = NSBundle.mainBundle().pathForResource("Untitled", ofType: "pdf") else {
-//        guard let pdfPath = NSBundle.mainBundle().pathForResource("unsearch", ofType: "pdf") else {
-        guard let pdfPath = NSBundle.mainBundle().pathForResource("check", ofType: "pdf") else {
+        guard let pdfPath = NSBundle.mainBundle().pathForResource("unsearch", ofType: "pdf") else {
+//        guard let pdfPath = NSBundle.mainBundle().pathForResource("check", ofType: "pdf") else {
+//        guard let pdfPath = NSBundle.mainBundle().pathForResource("failsearch", ofType: "pdf") else {
             return
         }
         guard let pdfData = NSData(contentsOfFile: pdfPath) else {
@@ -41,7 +42,7 @@ class ViewController: UIViewController {
             return
         }
         
-        let pageIndex = 2
+        let pageIndex = 1
         
         if let pdfPageView = document.viewForPageNumber(pageIndex) {
             drawResultsView.pageSize = pdfPageView.bounds.size;

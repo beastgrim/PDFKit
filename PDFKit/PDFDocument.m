@@ -14,6 +14,9 @@
     CGPDFDocumentRef documentRef;
 }
 
+@synthesize numberOfPages = _numberOfPages;
+
+
 - (instancetype)initWithData:(NSData *)pdfData {
     if (self = [super init]) {
         CGDataProviderRef dataProvider = CGDataProviderCreateWithCFData((CFDataRef)pdfData);
@@ -22,6 +25,15 @@
         
         if (documentRef == nil) { return nil; }
         _numberOfPages = CGPDFDocumentGetNumberOfPages(documentRef);        
+    }
+    return self;
+}
+
+- (instancetype)initWithCGPDFDocumentRef:(CGPDFDocumentRef)newDocumentRef {
+    if (self = [super init]) {
+        documentRef = newDocumentRef;
+        if (documentRef == nil) { return nil; }
+        _numberOfPages = CGPDFDocumentGetNumberOfPages(documentRef);
     }
     return self;
 }
