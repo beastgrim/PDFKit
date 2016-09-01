@@ -191,7 +191,7 @@ const char *kFontKey = "Font";
                 
                 CGAffineTransform tf = CGAffineTransformTranslate(weakSelf.renderingState.textMatrix, width, 0);
                 CGFloat resultWidth = MAX(0, tf.tx - startSearchPoint.x);
-                CGRect result = CGRectMake(startSearchPoint.x, pageSize.height-tf.ty, resultWidth, width);
+                CGRect result = CGRectMake(startSearchPoint.x, pageSize.height-tf.ty, resultWidth, size.height);
                 [searchResults addObject:[NSValue valueWithCGRect:result]];
             }
             

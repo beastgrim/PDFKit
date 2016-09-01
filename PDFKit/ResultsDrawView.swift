@@ -32,7 +32,6 @@ class ResultsDrawView: UIView {
         CGContextSetLineWidth(ctx, 2)
         
         for res in searchResults {
-            UIColor.redColor().set()
             
 //            let x = res.textRect.origin.x*scale
 //            let y = rect.height - res.textRect.origin.y*scale + 155
@@ -41,14 +40,15 @@ class ResultsDrawView: UIView {
 //            CGContextFillRect(ctx, CGRectMake(x, y+height+2, width, 2))
             
             var textRect = res.CGRectValue()
-            textRect.size.height = 1
+            textRect.origin.y -= textRect.size.height - 2
+//            textRect = CGRectInset(textRect, 0, -2)
 
 //            textRect.origin.y = (textRect.origin.y - textRect.size.height)*scale + 3 // - font size + padding
 //            textRect.origin.x *= scale
 //            textRect.size.height *= scale
 //            textRect.size.width *= scale
-            
-            CGContextStrokeRect(ctx, textRect)
+            CGContextSetFillColor(ctx, CGColorGetComponents(UIColor(colorLiteralRed: 0, green: 1, blue: 0, alpha: 0.38).CGColor))
+            CGContextFillRect(ctx, textRect)
             
         }
     }

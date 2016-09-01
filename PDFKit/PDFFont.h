@@ -32,6 +32,7 @@ typedef NS_ENUM (NSInteger, PDFFontType) {
 
 @property (nonatomic, readonly) CGFloat xHeight;
 @property (nonatomic, readonly) CGFloat capHeight;
+@property (nonatomic, readonly) CGFloat ascent;
 @property (nonatomic, readonly) CGFloat leading;
 @property (nonatomic, readonly) CGPDFInteger firstChar;
 @property (nonatomic, readonly) CGPDFInteger lastChar;

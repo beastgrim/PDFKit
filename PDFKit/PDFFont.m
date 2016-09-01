@@ -23,6 +23,7 @@ const char *kXHeight = "XHeight"; // (Optional) The font’s x height: the verti
 const char *kFontBBox = "FontBBox"; // (Required) A rectangle (see Section 3.8.3, “Rectangles”), expressed in the glyph coordinate system, specifying the font bounding box. This is the small- est rectangle enclosing the shape that would result if all of the glyphs of the font were placed with their origins coincident and then filled.
 const char *kLeading = "Leading"; // (Optional) The desired spacing between baselines of consecutive lines of text. Default value: 0.
 const char *kCapHeight = "CapHeight"; // (Required) The vertical coordinate of the top of flat capital letters, measured from the baseline.
+const char *kAscent = "Ascent"; // (Required) The maximum height above the baseline reached by glyphs in this font, excluding the height of glyphs for accented characters.
 const char *kMaxWidth = "MaxWidth"; // (Optional) The maximum width of glyphs in the font. Default value: 0.
 const char *kWidths = "Widths"; // (Required except for the standard 14 fonts; indirect reference preferred) An array of (LastChar − FirstChar + 1) widths, each element being the glyph width for the character whose code is FirstChar plus the array index. For character codes outside the range FirstChar to LastChar, the value of MissingWidth from the FontDescriptor entry for this font is used. The glyph widths are measured in units in which 1000 units corresponds to 1 unit in text space. These widths must be consistent with the actual widths given in the font program itself. (See implementation note 43 in Appendix H.) For more information on glyph widths and other glyph metrics, see Section 5.1.3, “Glyph Positioning and Metrics.”
 const char *kFirstChar = "FirstChar"; // (Required except for the standard 14 fonts) The first character code defined in the font’s Widths array.
@@ -59,8 +60,9 @@ typedef enum {
     CharacterEncoding encoding;
 }
 
-@synthesize type = _type, name = _name, spaceWidth = _spaceWidth, xHeight = _xHeight, capHeight = _capHeight, leading = _leading, firstChar = _firstChar, lastChar = _lastChar, widths = _widths, fontBBox = _fontBBox, bBoxRect = _bBoxRect, charSet = _charSet, cidWidths = _cidWidths, charToUnicode = _charToUnicode;
+@synthesize type = _type, name = _name, spaceWidth = _spaceWidth, xHeight = _xHeight, capHeight = _capHeight, leading = _leading, firstChar = _firstChar, lastChar = _lastChar, widths = _widths, fontBBox = _fontBBox, bBoxRect = _bBoxRect, charSet = _charSet, cidWidths = _cidWidths, charToUnicode = _charToUnicode, ascent = _ascent;
 CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderState);
+CGPDFReal fontHeight(void *pdfFont, void *renderState);
 
 - (instancetype)initWithName:(NSString *)name fontDict:(CGPDFDictionaryRef)fontDict {
     
@@ -180,11 +182,15 @@ CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderSta
             CGPDFReal Leading;
             if (CGPDFDictionaryGetNumber(fontDecriptor, kLeading, &Leading)) {
                 NSLog(@"Leading %f", Leading);
+            } */
+            CGPDFReal Ascent;
+            if (CGPDFDictionaryGetNumber(fontDecriptor, kAscent, &Ascent)) {
+                _ascent = Ascent;
             }
             CGPDFReal CapHeight;
             if (CGPDFDictionaryGetNumber(fontDecriptor, kCapHeight, &CapHeight)) {
-                NSLog(@"CapHeight %f", CapHeight);
-            } */
+                _capHeight = CapHeight;
+            }
             CGPDFArrayRef FontBBox;
             if (CGPDFDictionaryGetArray(fontDecriptor, kFontBBox, &FontBBox)) {
                 size_t count = CGPDFArrayGetCount(FontBBox);
@@ -406,15 +412,16 @@ CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderSta
 
         NSString *letter = _charToUnicode[@(code)];
         CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
+        CGPDFReal height = fontHeight((__bridge void *)(self), (__bridge void *)(renderingState));
         
         if (letter) {
-            callback(letter, CGSizeMake(width, width));
+            callback(letter, CGSizeMake(width, height));
             
         } else if (count == 2) {
             
             letter = _charToUnicode[@(code2)];
             if (letter) {
-                callback(letter, CGSizeMake(width, width));
+                callback(letter, CGSizeMake(width, height));
                 return;
             }
         } else {
@@ -424,7 +431,7 @@ CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderSta
             } else {
                 letter = [NSString stringWithFormat:@"%c", characterCodes[i]];
                 NSLog(@"WARNING CODE %d - '%@'", code, letter);
-                callback(letter, CGSizeMake(width, width));
+                callback(letter, CGSizeMake(width, height));
             }
         }
     }
@@ -482,6 +489,20 @@ CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderSta
         
         return width.floatValue;
     }
+}
+
+CGPDFReal fontHeight(void *pdfFont, void *renderState) {
+    PDFFont *font = (__bridge PDFFont *)(pdfFont);
+    RenderingState *renderingState = (__bridge RenderingState *)(renderState);
+    
+    CGPDFReal Tfs = renderingState.fontSize;
+    CGPDFReal scale = 1; // renderingState.textMatrix.d ?: 0;
+    CGPDFReal Th = renderingState.horizontalScaling / 100.0;
+    CGPDFReal ascent = font.ascent ?: 10000;
+
+    CGPDFReal result = (ascent / 1000.0 * scale * Tfs) * Th;
+
+    return result;
 }
 
 - (CGRect)bBoxRect {
