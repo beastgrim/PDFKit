@@ -58,11 +58,15 @@ typedef enum {
 @implementation PDFFont {
     CGFloat defaultWidth;
     CharacterEncoding encoding;
+    BOOL useDecode;
 }
 
 @synthesize type = _type, name = _name, spaceWidth = _spaceWidth, xHeight = _xHeight, capHeight = _capHeight, leading = _leading, firstChar = _firstChar, lastChar = _lastChar, widths = _widths, fontBBox = _fontBBox, bBoxRect = _bBoxRect, charSet = _charSet, cidWidths = _cidWidths, charToUnicode = _charToUnicode, ascent = _ascent;
 CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderState);
 CGPDFReal fontHeight(void *pdfFont, void *renderState);
+
+
+#pragma mark -
 
 - (instancetype)initWithName:(NSString *)name fontDict:(CGPDFDictionaryRef)fontDict {
     
@@ -237,6 +241,9 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
             }
         }
     }
+    
+    printf("Init font %s toUnicodeMap %ld\n", name.UTF8String, (unsigned long)_charToUnicode.count);
+    useDecode = _charToUnicode.count > 0;
     return self;
 }
 
@@ -408,34 +415,37 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
         const unsigned char code = characterCodes[i];
         if (code == 0) continue;
 
-        const uint16_t code2 = characterCodes[1] + (characterCodes[0] << 8);  // 16 byte code
+        const uint16_t code2 = characterCodes[i+1] + (characterCodes[i] << 8);  // 16 byte code
 
-        NSString *letter = _charToUnicode[@(code)];
         CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
         CGPDFReal height = fontHeight((__bridge void *)(self), (__bridge void *)(renderingState));
         
-        if (letter) {
-            callback(letter, CGSizeMake(width, height));
+        if (useDecode) {
+            NSString *letter = _charToUnicode[@(code)];
             
-        } else if (count == 2) {
-            
-            letter = _charToUnicode[@(code2)];
             if (letter) {
                 callback(letter, CGSizeMake(width, height));
-                return;
-            }
-        } else {
-            
-            if (code == 32) {
-                callback(@" ", CGSizeMake(width, width));
+                
             } else {
-                letter = [NSString stringWithFormat:@"%c", characterCodes[i]];
-                NSLog(@"WARNING CODE %d - '%@'", code, letter);
-                callback(letter, CGSizeMake(width, height));
+                if (i+1 < count && _charToUnicode[@(code2)]) {
+                    letter = _charToUnicode[@(code2)];
+                    callback(letter, CGSizeMake(width, height));
+                    ++i; continue;
+                    
+                } else {    // english letters
+                    
+                    letter = [NSString stringWithFormat:@"%c", characterCodes[i]];
+                    NSLog(@"WARNING CODE %d - '%@'", code, letter);
+                    callback(letter, CGSizeMake(width, height));
+                }
             }
+            
+        } else {
+            NSString *letter = [NSString stringWithFormat:@"%c", characterCodes[i]];
+            callback(letter, CGSizeMake(width, height));
         }
+
     }
-    
 }
 
 CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderState) {
@@ -498,9 +508,14 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState) {
     CGPDFReal Tfs = renderingState.fontSize;
     CGPDFReal scale = 1; // renderingState.textMatrix.d ?: 0;
     CGPDFReal Th = renderingState.horizontalScaling / 100.0;
-    CGPDFReal ascent = font.ascent ?: 10000;
-
-    CGPDFReal result = (ascent / 1000.0 * scale * Tfs) * Th;
+    CGPDFReal ascent = MAX(font.xHeight, MAX(font.ascent, font.capHeight)) ?: 1000;
+    
+    CGAffineTransform a = renderingState.textMatrix;
+    CGPDFReal textYScale = sqrt(a.a * a.a + a.c * a.c);
+    CGAffineTransform t = renderingState.ctm;
+    CGPDFReal globalYScale = sqrt(t.a * t.a + t.c * t.c);
+    
+    CGPDFReal result = (ascent / 1000.0 * scale * Tfs) * Th * globalYScale * textYScale;
 
     return result;
 }

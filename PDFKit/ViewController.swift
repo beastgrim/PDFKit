@@ -32,7 +32,7 @@ class ViewController: UIViewController {
 //        guard let pdfPath = NSBundle.mainBundle().pathForResource("Untitled", ofType: "pdf") else {
 //        guard let pdfPath = NSBundle.mainBundle().pathForResource("unsearch", ofType: "pdf") else {
 //        guard let pdfPath = NSBundle.mainBundle().pathForResource("check", ofType: "pdf") else {
-        guard let pdfPath = NSBundle.mainBundle().pathForResource("failsearch", ofType: "pdf") else {
+        guard let pdfPath = NSBundle.mainBundle().pathForResource("failsearch_resolved", ofType: "pdf") else {
             return
         }
         guard let pdfData = NSData(contentsOfFile: pdfPath) else {
@@ -49,7 +49,7 @@ class ViewController: UIViewController {
             view.addSubview(pdfPageView)
         }
 
-        let results = document.searchText("на", onPage: UInt(pageIndex))
+        let results = document.searchText("не", onPage: UInt(pageIndex))
         
         view.bringSubviewToFront(drawResultsView)
         drawResultsView.layer.borderWidth = 2
