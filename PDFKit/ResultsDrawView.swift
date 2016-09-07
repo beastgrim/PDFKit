@@ -31,7 +31,7 @@ class ResultsDrawView: UIView {
 //        CGContextConcatCTM(ctx, transform)
         CGContextSetLineWidth(ctx, 2)
         
-        for res in searchResults {
+        for (i,res) in searchResults.enumerate() {
             
 //            let x = res.textRect.origin.x*scale
 //            let y = rect.height - res.textRect.origin.y*scale + 155
@@ -40,6 +40,7 @@ class ResultsDrawView: UIView {
 //            CGContextFillRect(ctx, CGRectMake(x, y+height+2, width, 2))
             
             var textRect = res.CGRectValue()
+//            textRect.size.width = max(textRect.size.width, 20)
             textRect.origin.y -= textRect.size.height - 2
 //            textRect = CGRectInset(textRect, 0, -2)
 
@@ -47,9 +48,11 @@ class ResultsDrawView: UIView {
 //            textRect.origin.x *= scale
 //            textRect.size.height *= scale
 //            textRect.size.width *= scale
+
             CGContextSetFillColor(ctx, CGColorGetComponents(UIColor(colorLiteralRed: 0, green: 1, blue: 0, alpha: 0.38).CGColor))
             CGContextFillRect(ctx, textRect)
             
+//            (i.description as NSString).drawInRect(textRect, withAttributes: [NSForegroundColorAttributeName: UIColor.redColor(), NSFontAttributeName: UIFont.boldSystemFontOfSize(16)])
         }
     }
 

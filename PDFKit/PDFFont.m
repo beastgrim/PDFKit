@@ -419,30 +419,31 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
 
         CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
         CGPDFReal height = fontHeight((__bridge void *)(self), (__bridge void *)(renderingState));
+        CGSize size = CGSizeMake(width/1000.0, height/1000.0);
         
         if (useDecode) {
             NSString *letter = _charToUnicode[@(code)];
             
             if (letter) {
-                callback(letter, CGSizeMake(width, height));
+                callback(letter, size);
                 
             } else {
                 if (i+1 < count && _charToUnicode[@(code2)]) {
                     letter = _charToUnicode[@(code2)];
-                    callback(letter, CGSizeMake(width, height));
+                    callback(letter, size);
                     ++i; continue;
                     
                 } else {    // english letters
                     
                     letter = [NSString stringWithFormat:@"%c", characterCodes[i]];
                     NSLog(@"WARNING CODE %d - '%@'", code, letter);
-                    callback(letter, CGSizeMake(width, height));
+                    callback(letter, size);
                 }
             }
             
         } else {
             NSString *letter = [NSString stringWithFormat:@"%c", characterCodes[i]];
-            callback(letter, CGSizeMake(width, height));
+            callback(letter, size);
         }
 
     }
@@ -453,69 +454,59 @@ CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderSta
     RenderingState *renderingState = (__bridge RenderingState *)(renderState);
     
     size_t countCodes = font.widths.size;
-
     size_t charIndex = code - font.firstChar;
+    CGPDFInteger w0 = 0;
+    
     if (countCodes > charIndex) {
-        CGPDFInteger w0 = font.widths.values[charIndex];
-        
-        /* Right way parsing text positiong after drawing glif
-         tx = ((w0 - (Tj/1000))*Tfs + Tc + Tw)*Th
-         ty = (w1 -(Tj/1000))*Tfs + Tc + Tw
-         
-         where:
-         w0 and w1 are the glyph’s horizontal and vertical displacements
-         Tj is a position adjustment specified by a number in a TJ array, if any
-         Tfs and Th are the current text font size and horizontal scaling parameters in the graphics state
-         Tc and Tw are the current character and word spacing parameters in the graphics state, if applicable
-         */
-        
-        CGPDFReal Tfs = renderingState.fontSize;
-        CGPDFReal Tc = renderingState.characterSpacing;
-        
-        CGPDFReal Tw = 0.0;
-        if (code == 32) {
-            Tw = renderingState.wordSpacing; // Word spacing works the same way as character spacing, but applies only to the space character, code 32.
-        }
-        CGPDFReal Th = renderingState.horizontalScaling / 100.0;
-        CGPDFReal width = (w0*Tfs + Tc + Tw)*Th;
-        
-        
-//        NSString *letter = font.mapper.map[@(code)];
-//        if (!letter) {
-//            letter = font.glifNameByCode[@(code)];
-//            NSDictionary *cirillicMap = [ToUnicodeMapper standardCyrillicGlyphNames];
-//            letter = cirillicMap[letter];
-//        }
-        return width;
-        
-    } else if (code == 0) {
-        return 0;
+        w0 = font.widths.values[charIndex];
     } else {
         NSNumber *width = [font.cidWidths objectForKey:[NSNumber numberWithInteger:code]];
-        if (width == nil) {
+        if (width) {
+            w0 = width.floatValue;
+        } else {
             NSLog(@"ERROR: [%@] get char width index: %zu, charCode %d widthsLength %zu", font.name, charIndex, code, countCodes);
-            return font->defaultWidth;
+            w0 = font->defaultWidth;
         }
-        
-        return width.floatValue;
     }
+    
+    /* Right way parsing text positiong after drawing glif
+     tx = ((w0 - (Tj/1000))*Tfs + Tc + Tw)*Th
+     ty = (w1 -(Tj/1000))*Tfs + Tc + Tw
+     
+     where:
+     w0 and w1 are the glyph’s horizontal and vertical displacements
+     Tj is a position adjustment specified by a number in a TJ array, if any
+     Tfs and Th are the current text font size and horizontal scaling parameters in the graphics state
+     Tc and Tw are the current character and word spacing parameters in the graphics state, if applicable
+     */
+    
+    CGPDFReal Tfs = renderingState.fontSize;
+    CGPDFReal Tc = renderingState.characterSpacing;
+    CGPDFReal Tw = 0.0;
+    CGPDFReal Th = renderingState.horizontalScaling / 100.0;
+    
+    if (code == 32) {
+        Tw = renderingState.wordSpacing; // Word spacing works the same way as character spacing, but applies only to the space character, code 32.
+    }
+    CGPDFReal width = (w0*Tfs + Tc + Tw)*Th;
+    
+    return width;
 }
 
 CGPDFReal fontHeight(void *pdfFont, void *renderState) {
     PDFFont *font = (__bridge PDFFont *)(pdfFont);
     RenderingState *renderingState = (__bridge RenderingState *)(renderState);
-    
+    CGAffineTransform tm = renderingState.textMatrix;
+
     CGPDFReal Tfs = renderingState.fontSize;
-    CGPDFReal scale = 1; // renderingState.textMatrix.d ?: 0;
+    CGPDFReal scale = sqrt(tm.b * tm.b + tm.d * tm.d);
     CGPDFReal Th = renderingState.horizontalScaling / 100.0;
     CGPDFReal ascent = MAX(font.xHeight, MAX(font.ascent, font.capHeight)) ?: 1000;
     
-    CGAffineTransform a = renderingState.textMatrix;
-    CGPDFReal textYScale = sqrt(a.a * a.a + a.c * a.c);
     CGAffineTransform t = renderingState.ctm;
-    CGPDFReal globalYScale = sqrt(t.a * t.a + t.c * t.c);
+    CGPDFReal globalYScale = sqrt(t.b * t.b + t.d * t.d);
     
-    CGPDFReal result = (ascent / 1000.0 * scale * Tfs) * Th * globalYScale * textYScale;
+    CGPDFReal result = (ascent * scale * Tfs) * Th * globalYScale;
 
     return result;
 }
