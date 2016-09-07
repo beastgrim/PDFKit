@@ -28,6 +28,9 @@
 		900B6A9A1D674EED0027B710 /* Times-Roman.afm in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A8B1D674EED0027B710 /* Times-Roman.afm */; };
 		900B6A9B1D674EED0027B710 /* ZapfDingbats.afm in Resources */ = {isa = PBXBuildFile; fileRef = 900B6A8C1D674EED0027B710 /* ZapfDingbats.afm */; };
 		902327971D7EEED00048CDA7 /* Untitled.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 902327961D7EEED00048CDA7 /* Untitled.pdf */; };
+		9023279A1D8048830048CDA7 /* sample1.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 902327981D8048830048CDA7 /* sample1.pdf */; };
+		9023279B1D8048830048CDA7 /* sample2.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 902327991D8048830048CDA7 /* sample2.pdf */; };
+		9023279D1D804C4D0048CDA7 /* PDFReference.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 9023279C1D804C4D0048CDA7 /* PDFReference.pdf */; };
 		9025EAFB1D3FCC78006CA315 /* RenderingState.m in Sources */ = {isa = PBXBuildFile; fileRef = 9025EAFA1D3FCC78006CA315 /* RenderingState.m */; };
 		903043141D24268F0060290E /* test.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 903043131D24268F0060290E /* test.pdf */; };
 		903043191D242CBC0060290E /* ResultsDrawView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 903043181D242CBC0060290E /* ResultsDrawView.swift */; };
@@ -86,6 +89,9 @@
 		900B6A8B1D674EED0027B710 /* Times-Roman.afm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Times-Roman.afm"; sourceTree = "<group>"; };
 		900B6A8C1D674EED0027B710 /* ZapfDingbats.afm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ZapfDingbats.afm; sourceTree = "<group>"; };
 		902327961D7EEED00048CDA7 /* Untitled.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = Untitled.pdf; path = ../../../Desktop/Untitled.pdf; sourceTree = "<group>"; };
+		902327981D8048830048CDA7 /* sample1.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = sample1.pdf; path = ../../../Downloads/sample1.pdf; sourceTree = "<group>"; };
+		902327991D8048830048CDA7 /* sample2.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = sample2.pdf; path = ../../../Downloads/sample2.pdf; sourceTree = "<group>"; };
+		9023279C1D804C4D0048CDA7 /* PDFReference.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = PDFReference.pdf; path = ../../PDFReference.pdf; sourceTree = "<group>"; };
 		9025EAF91D3FCC78006CA315 /* RenderingState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RenderingState.h; sourceTree = "<group>"; };
 		9025EAFA1D3FCC78006CA315 /* RenderingState.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RenderingState.m; sourceTree = "<group>"; };
 		903043131D24268F0060290E /* test.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = test.pdf; sourceTree = "<group>"; };
@@ -186,6 +192,9 @@
 				90ED23961D6C99050037D92B /* crash.pdf */,
 				90ED23981D6D900B0037D92B /* check.pdf */,
 				9045A1E31D6F48C4000EB6A3 /* failsearch.pdf */,
+				902327981D8048830048CDA7 /* sample1.pdf */,
+				902327991D8048830048CDA7 /* sample2.pdf */,
+				9023279C1D804C4D0048CDA7 /* PDFReference.pdf */,
 				90DA1DC31D1C48EB00519EE9 /* PDFKit */,
 				90DA1DD81D1C48EB00519EE9 /* PDFKitTests */,
 				90DA1DC21D1C48EB00519EE9 /* Products */,
@@ -343,6 +352,7 @@
 				900B6A8D1D674EED0027B710 /* Courier-Bold.afm in Resources */,
 				900B6A8F1D674EED0027B710 /* Courier-Oblique.afm in Resources */,
 				900B6A8E1D674EED0027B710 /* Courier-BoldOblique.afm in Resources */,
+				9023279D1D804C4D0048CDA7 /* PDFReference.pdf in Resources */,
 				900B6A951D674EED0027B710 /* MustRead.html in Resources */,
 				90ED23971D6C99050037D92B /* crash.pdf in Resources */,
 				90587D2D1D5B158500C16FF8 /* failsearch_resolved.pdf in Resources */,
@@ -351,9 +361,11 @@
 				90DA1DCA1D1C48EB00519EE9 /* Main.storyboard in Resources */,
 				904CE53C1D4A5D1B0097ACA2 /* unsearch.pdf in Resources */,
 				902327971D7EEED00048CDA7 /* Untitled.pdf in Resources */,
+				9023279B1D8048830048CDA7 /* sample2.pdf in Resources */,
 				900B6A9A1D674EED0027B710 /* Times-Roman.afm in Resources */,
 				903043141D24268F0060290E /* test.pdf in Resources */,
 				900B6A981D674EED0027B710 /* Times-BoldItalic.afm in Resources */,
+				9023279A1D8048830048CDA7 /* sample1.pdf in Resources */,
 				900B6A971D674EED0027B710 /* Times-Bold.afm in Resources */,
 				900B6A911D674EED0027B710 /* Helvetica-Bold.afm in Resources */,
 				900B6A991D674EED0027B710 /* Times-Italic.afm in Resources */,

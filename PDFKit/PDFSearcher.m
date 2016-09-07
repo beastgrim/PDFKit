@@ -117,9 +117,9 @@ void printPDFObject(CGPDFObjectRef pdfObject);
         CGPDFOperatorTableSetCallback(table, "d1", test);
 
         // Graphics state operators (Special graphics state)
-        CGPDFOperatorTableSetCallback(table, "Q", popRenderingState);
-        CGPDFOperatorTableSetCallback(table, "q", pushRenderingState);
-        CGPDFOperatorTableSetCallback(table, "cm", applyTransformation);
+        CGPDFOperatorTableSetCallback(table, "Q", popRenderingState);   // Restore the graphics state by removing the most recently saved state from the stack and making it the current state (see “Graphics State Stack” on page 152).
+        CGPDFOperatorTableSetCallback(table, "q", pushRenderingState);  // Save the current graphics state on the graphics state stack (see “Graphics State Stack” on page 152).
+        CGPDFOperatorTableSetCallback(table, "cm", applyTransformation);    // Modify the current transformation matrix (CTM) by concatenating the specified matrix (see Section 4.2.1, “Coordinate Spaces”). Although the operands specify a matrix, they are written as six separate numbers, not as an array.
     }
     return self;
 }
@@ -136,11 +136,14 @@ void printPDFObject(CGPDFObjectRef pdfObject);
     if (inSearchString.length > 0) {
         searchStr = [inSearchString uppercaseString];
         searchLength = searchStr.length;
-        CGRect cropBoxRect = CGPDFPageGetBoxRect(inPage, kCGPDFMediaBox);
+        CGRect cropBoxRect = CGPDFPageGetBoxRect(inPage, kCGPDFCropBox);
+        CGRect mediaBoxRect = CGPDFPageGetBoxRect(inPage, kCGPDFMediaBox);
         pageSize = cropBoxRect.size;
         
+        CGFloat diffY = (mediaBoxRect.size.height - cropBoxRect.size.height)/2;
+        CGFloat diffX = (mediaBoxRect.size.width - cropBoxRect.size.width)/2;
         // Initial value: a matrix that transforms default user coordinates to device coordinates.
-        self.renderingState.ctm = CGAffineTransformMake(1, 0, 0, -1, 0, pageSize.height);
+        self.renderingState.ctm = CGAffineTransformMake(1, 0, 0, -1, -diffX, pageSize.height + diffY);
         
         [self fontCollectionWithPage:inPage];
         
@@ -181,8 +184,6 @@ const char *kFontKey = "Font";
 
         NSRange currentRange = NSMakeRange(foundIndex, 1);
         BOOL textMatrixUpdated = NO;
-//        size.width *=
-        printf("Char %s - %f font %s\n", character.UTF8String, size.width, font.name.UTF8String);
         
         if ([[character uppercaseString] isEqualToString:[searchStr substringWithRange:currentRange]]) {
             foundIndex++;
@@ -204,12 +205,6 @@ const char *kFontKey = "Font";
                 CGAffineTransform trm = [weakSelf getTextRenderingMatrix];
                 searchRect.size.width = MAX(10, trm.tx - searchRect.origin.x);
 
-//                CGAffineTransform tm = renderState.textMatrix;
-//                BOOL flipVertical = tm.a == 1 && tm.d == -1;
-//                if (flipVertical) {
-//                    searchRect.origin.y = (pageSize.height - searchRect.origin.y);
-//                }
-                
                 [weakSelf savePDFSearchRect:searchRect];
                 foundIndex = 0;
             }
@@ -224,9 +219,6 @@ const char *kFontKey = "Font";
 }
 
 - (void) savePDFSearchRect:(CGRect)rect {
-//    CGAffineTransform flipVertical = CGAffineTransformMake(1, 0, 0, -1, 0, pageSize.height);
-//    CGRect result = CGRectApplyAffineTransform(rect, flipVertical);
-//    result.origin.y += rect.size.height;
     [searchResults addObject:[NSValue valueWithCGRect:rect]];
 }
 
@@ -325,7 +317,7 @@ void applyTransformation(CGPDFScannerRef pdfScanner, void *userInfo)
     RenderingState *state = searcher.renderingState;
     
     CGAffineTransform tf = getTransform(pdfScanner);
-    state.ctm = tf;
+    state.ctm = CGAffineTransformConcat(tf, state.ctm);
 }
 
 #pragma mark Font info
@@ -342,12 +334,12 @@ void fontInfoCallback(CGPDFScannerRef inScanner, void *userInfo)
     searcher->currentFontName = [NSString stringWithFormat:@"%s", fontName];
     searcher.renderingState.fontSize = fontSize;
 }
-
+// BT
 void startTextCallback(CGPDFScannerRef inScanner, void *userInfo) {
     PDFSearcher * searcher = (__bridge PDFSearcher *)userInfo;
     [searcher.renderingState setTextMatrix:CGAffineTransformIdentity replaceLineMatrix:YES];
 }
-
+// ET
 void endTextCallback(CGPDFScannerRef inScanner, void *userInfo) {
     PDFSearcher * searcher = (__bridge PDFSearcher *)userInfo;
     [searcher.unicodeContent appendFormat:@"\n"];
@@ -417,9 +409,11 @@ void wordSpacing(CGPDFScannerRef pdfScanner, void *userInfo)
         self.renderingState.lineMatrix = matrix;
     }
 }
+
 - (void)translateTextPosition:(CGSize)size {
     self.renderingState.textMatrix = CGAffineTransformTranslate(self.renderingState.textMatrix, size.width, size.height);
 }
+
 - (CGAffineTransform)getTextRenderingMatrix {
     RenderingState *r = self.renderingState;
     
@@ -475,24 +469,27 @@ void printStringNewLineSetSpacing(CGPDFScannerRef pdfScanner, void *userInfo) {
 
 void setTextLeading(CGPDFScannerRef pdfScanner, void *userInfo) {
     PDFSearcher *searcher = (__bridge PDFSearcher *)userInfo;
-    [searcher.renderingState setLeadning:getNumber(pdfScanner)];
+    CGPDFReal leading = getNumber(pdfScanner);
+    searcher.renderingState.leadning = leading;
 }
 
 void setHorizontalScale(CGPDFScannerRef pdfScanner, void *userInfo) {
     PDFSearcher *searcher = (__bridge PDFSearcher *)userInfo;
-    searcher.renderingState.horizontalScaling = getNumber(pdfScanner);
+    CGPDFReal horizontalScaling = getNumber(pdfScanner);
+    searcher.renderingState.horizontalScaling = horizontalScaling;
 }
 
 void setTextRise(CGPDFScannerRef pdfScanner, void *userInfo) {
     PDFSearcher *searcher = (__bridge PDFSearcher *)userInfo;
-    [searcher.renderingState setTextRise:getNumber(pdfScanner)];
+    CGPDFReal textRise = getNumber(pdfScanner);
+    searcher.renderingState.textRise = textRise;
 }
 
 void setRenderingMode(CGPDFScannerRef pdfScanner, void *userInfo) {
     CGPDFInteger mode;
     CGPDFScannerPopInteger(pdfScanner, &mode);
     
-//    NSLog(@"Rendering mode is %ld", mode);
+    NSLog(@"Rendering mode is %ld", mode);
 }
 
 

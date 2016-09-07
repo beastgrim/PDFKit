@@ -32,7 +32,9 @@ class ViewController: UIViewController {
 //        guard let pdfPath = NSBundle.mainBundle().pathForResource("Untitled", ofType: "pdf") else {
 //        guard let pdfPath = NSBundle.mainBundle().pathForResource("unsearch", ofType: "pdf") else {
 //        guard let pdfPath = NSBundle.mainBundle().pathForResource("crash", ofType: "pdf") else {
-        guard let pdfPath = NSBundle.mainBundle().pathForResource("failsearch_resolved", ofType: "pdf") else {
+//        guard let pdfPath = NSBundle.mainBundle().pathForResource("failsearch_resolved", ofType: "pdf") else {
+//        guard let pdfPath = NSBundle.mainBundle().pathForResource("sample2", ofType: "pdf") else {
+        guard let pdfPath = NSBundle.mainBundle().pathForResource("PDFReference", ofType: "pdf") else {
             return
         }
         guard let pdfData = NSData(contentsOfFile: pdfPath) else {
@@ -42,14 +44,14 @@ class ViewController: UIViewController {
             return
         }
         
-        let pageIndex = 1
+        let pageIndex = 100
         
         if let pdfPageView = document.viewForPageNumber(pageIndex) {
             drawResultsView.pageSize = pdfPageView.bounds.size;
             view.addSubview(pdfPageView)
         }
 
-        let results = document.searchText("по", onPage: UInt(pageIndex))
+        let results = document.searchText("th", onPage: UInt(pageIndex))
         
         view.bringSubviewToFront(drawResultsView)
         drawResultsView.layer.borderWidth = 2
