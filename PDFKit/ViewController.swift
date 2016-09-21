@@ -34,8 +34,11 @@ class ViewController: UIViewController {
 //        guard let pdfPath = NSBundle.mainBundle().pathForResource("crash", ofType: "pdf") else {
 //        guard let pdfPath = NSBundle.mainBundle().pathForResource("failsearch_resolved", ofType: "pdf") else {
 //        guard let pdfPath = NSBundle.mainBundle().pathForResource("sample2", ofType: "pdf") else {
-        guard let pdfPath = NSBundle.mainBundle().pathForResource("PDFReference", ofType: "pdf") else {
-            return
+//        guard let pdfPath = NSBundle.mainBundle().pathForResource("PDFReference", ofType: "pdf") else {failhighlight
+        guard let pdfPath = NSBundle.mainBundle().pathForResource("failhighlight", ofType: "pdf") else {
+//        guard let pdfPath = NSBundle.mainBundle().pathForResource("failhighlight2", ofType: "pdf") else {
+//        guard let pdfPath = NSBundle.mainBundle().pathForResource("failhighlight3", ofType: "pdf") else {
+          return
         }
         guard let pdfData = NSData(contentsOfFile: pdfPath) else {
             return
@@ -44,14 +47,14 @@ class ViewController: UIViewController {
             return
         }
         
-        let pageIndex = 100
+        let pageIndex = 2
         
         if let pdfPageView = document.viewForPageNumber(pageIndex) {
             drawResultsView.pageSize = pdfPageView.bounds.size;
             view.addSubview(pdfPageView)
         }
 
-        let results = document.searchText("th", onPage: UInt(pageIndex))
+        let results = document.searchText("на", onPage: UInt(pageIndex))
         
         view.bringSubviewToFront(drawResultsView)
         drawResultsView.layer.borderWidth = 2

@@ -38,6 +38,9 @@
 		9045A1E41D6F48C4000EB6A3 /* failsearch.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 9045A1E31D6F48C4000EB6A3 /* failsearch.pdf */; };
 		904CE53C1D4A5D1B0097ACA2 /* unsearch.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 904CE53B1D4A5D1B0097ACA2 /* unsearch.pdf */; };
 		90587D2D1D5B158500C16FF8 /* failsearch_resolved.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 90587D2C1D5B158500C16FF8 /* failsearch_resolved.pdf */; };
+		905E218F1D9277C200CD74BD /* failhighlight.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 905E218E1D9277C200CD74BD /* failhighlight.pdf */; };
+		905E21921D92972100CD74BD /* failhighlight3.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 905E21901D92972100CD74BD /* failhighlight3.pdf */; };
+		905E21931D92972100CD74BD /* failhighlight2.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 905E21911D92972100CD74BD /* failhighlight2.pdf */; };
 		90DA1DC51D1C48EB00519EE9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DA1DC41D1C48EB00519EE9 /* AppDelegate.swift */; };
 		90DA1DC71D1C48EB00519EE9 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DA1DC61D1C48EB00519EE9 /* ViewController.swift */; };
 		90DA1DCA1D1C48EB00519EE9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 90DA1DC81D1C48EB00519EE9 /* Main.storyboard */; };
@@ -101,6 +104,9 @@
 		9045A1E31D6F48C4000EB6A3 /* failsearch.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = failsearch.pdf; sourceTree = "<group>"; };
 		904CE53B1D4A5D1B0097ACA2 /* unsearch.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = unsearch.pdf; sourceTree = "<group>"; };
 		90587D2C1D5B158500C16FF8 /* failsearch_resolved.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = failsearch_resolved.pdf; sourceTree = "<group>"; };
+		905E218E1D9277C200CD74BD /* failhighlight.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = failhighlight.pdf; sourceTree = "<group>"; };
+		905E21901D92972100CD74BD /* failhighlight3.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = failhighlight3.pdf; path = ../../../Downloads/failhighlight3.pdf; sourceTree = "<group>"; };
+		905E21911D92972100CD74BD /* failhighlight2.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = failhighlight2.pdf; path = ../../../Downloads/failhighlight2.pdf; sourceTree = "<group>"; };
 		90DA1DC11D1C48EB00519EE9 /* PDFKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PDFKit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		90DA1DC41D1C48EB00519EE9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		90DA1DC61D1C48EB00519EE9 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -186,6 +192,9 @@
 			children = (
 				90DA1DEC1D1C4A8900519EE9 /* CoreGraphics.framework */,
 				903043131D24268F0060290E /* test.pdf */,
+				905E218E1D9277C200CD74BD /* failhighlight.pdf */,
+				905E21901D92972100CD74BD /* failhighlight3.pdf */,
+				905E21911D92972100CD74BD /* failhighlight2.pdf */,
 				904CE53B1D4A5D1B0097ACA2 /* unsearch.pdf */,
 				90587D2C1D5B158500C16FF8 /* failsearch_resolved.pdf */,
 				902327961D7EEED00048CDA7 /* Untitled.pdf */,
@@ -352,7 +361,9 @@
 				900B6A8D1D674EED0027B710 /* Courier-Bold.afm in Resources */,
 				900B6A8F1D674EED0027B710 /* Courier-Oblique.afm in Resources */,
 				900B6A8E1D674EED0027B710 /* Courier-BoldOblique.afm in Resources */,
+				905E21921D92972100CD74BD /* failhighlight3.pdf in Resources */,
 				9023279D1D804C4D0048CDA7 /* PDFReference.pdf in Resources */,
+				905E218F1D9277C200CD74BD /* failhighlight.pdf in Resources */,
 				900B6A951D674EED0027B710 /* MustRead.html in Resources */,
 				90ED23971D6C99050037D92B /* crash.pdf in Resources */,
 				90587D2D1D5B158500C16FF8 /* failsearch_resolved.pdf in Resources */,
@@ -363,6 +374,7 @@
 				902327971D7EEED00048CDA7 /* Untitled.pdf in Resources */,
 				9023279B1D8048830048CDA7 /* sample2.pdf in Resources */,
 				900B6A9A1D674EED0027B710 /* Times-Roman.afm in Resources */,
+				905E21931D92972100CD74BD /* failhighlight2.pdf in Resources */,
 				903043141D24268F0060290E /* test.pdf in Resources */,
 				900B6A981D674EED0027B710 /* Times-BoldItalic.afm in Resources */,
 				9023279A1D8048830048CDA7 /* sample1.pdf in Resources */,
@@ -538,6 +550,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "PDFKit/PDFKit-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 2.3;
 			};
 			name = Debug;
 		};
@@ -551,6 +564,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = BE.PDFKit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "PDFKit/PDFKit-Bridging-Header.h";
+				SWIFT_VERSION = 2.3;
 			};
 			name = Release;
 		};

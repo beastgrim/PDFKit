@@ -31,7 +31,9 @@ const char *kLastChar = "LastChar"; // (Required except for the standard 14 font
 
 const char *kW = "W";   // A description of the widths for the glyphs in the CIDFont. The array’s elements have a variable format that can specify individual widths for consecutive CIDs or one width for a range of CIDs (see “Glyph Metrics in CIDFonts” on page 340). Default value: none (the DW value is used for all glyphs).
 const char *kDW = "DW"; // The default width for glyphs in the CIDFont (see “Glyph Met- rics in CIDFonts” on page 340). Default value: 1000.
+const char *kAvgWidth = "AvgWidth";
 const char *kFontFile3 = "FontFile3";
+const char *kFontFile2 = "FontFile2";
 const char *kDescendantFonts = "DescendantFonts"; // A CID-keyed font, then, is the combination of a CMap with one or more CIDFonts, simple fonts, or composite fonts containing glyph descriptions. In PDF, a CID-keyed font is represented as a Type 0 font. It contains an Encoding entry whose value is a CMap dictionary, and its DescendantFonts array refer- ences the CIDFont or font dictionaries with which the CMap has been combined.
 const char *kCIDSystemInfo = "CIDSystemInfo"; // CIDSystemInfo entry is a dictionary that specifies the CIDFont’s character collection. Note that the CIDFont need not contain glyph descriptions for all the CIDs in a collection; it can contain a subset. In a CMap, the CIDSystemInfo entry is either a single dictionary or an array of dictionaries, depending on whether it associates codes with a single character collection or with multiple character collections; see Section 5.6.4, “CMaps.”
 
@@ -57,6 +59,7 @@ typedef enum {
 
 @implementation PDFFont {
     CGFloat defaultWidth;
+    CGFloat avgWidth;
     CharacterEncoding encoding;
     BOOL useDecode;
 }
@@ -161,11 +164,27 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
         CGPDFDictionaryRef fontDecriptor;
         if (CGPDFDictionaryGetDictionary(fontDict, kFontDescriptorKey, &fontDecriptor)) {
             // try get Font File stream
-            CGPDFObjectRef FontFile;
-            if (CGPDFDictionaryGetObject(fontDecriptor, kFontFile3, &FontFile)) {
+            CGPDFObjectRef FontFile2;
+            if (CGPDFDictionaryGetObject(fontDecriptor, kFontFile2, &FontFile2)) {
                 
                 CGPDFStreamRef FontFileStream;
-                if (CGPDFObjectGetValue(toUnicodeObj, kCGPDFObjectTypeStream, &FontFileStream)) {
+                if (CGPDFObjectGetValue(FontFile2, kCGPDFObjectTypeStream, &FontFileStream)) {
+                    
+                    CFDataRef dataRef = CGPDFStreamCopyData(FontFileStream, NULL);
+                    NSData *data = (__bridge NSData*)dataRef;
+                    ToUnicodeMapper *mapper = [[ToUnicodeMapper alloc] initWithData:data];
+                    
+                    for (NSNumber *code in mapper.map.allKeys) {
+                        [_charToUnicode setObject:mapper.map[code] forKey:code];
+                    }
+//                    NSLog(@"FontFile stream: %@", [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding]);
+                }
+            }
+            CGPDFObjectRef FontFile3;
+            if (CGPDFDictionaryGetObject(fontDecriptor, kFontFile3, &FontFile3)) {
+                
+                CGPDFStreamRef FontFileStream;
+                if (CGPDFObjectGetValue(FontFile3, kCGPDFObjectTypeStream, &FontFileStream)) {
                     
                     CFDataRef dataRef = CGPDFStreamCopyData(FontFileStream, NULL);
                     NSData *data = (__bridge NSData*)dataRef;
@@ -321,6 +340,12 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
             CGPDFDictionaryRef fontDecriptor;
             if (CGPDFDictionaryGetDictionary(fontDict, kFontDescriptorKey, &fontDecriptor)) {
                 
+                // avarage width
+                CGPDFInteger avgWidthValue;
+                if (CGPDFDictionaryGetInteger(fontDecriptor, kAvgWidth, &avgWidthValue)) {
+                    avgWidth = avgWidthValue;
+                }
+                
                 // try get Font File stream
                 CGPDFObjectRef FontFile;
                 if (CGPDFDictionaryGetObject(fontDecriptor, kFontFile3, &FontFile)) {
@@ -332,10 +357,25 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
                         NSData *data = (__bridge NSData*)dataRef;
                         ToUnicodeMapper *mapper = [[ToUnicodeMapper alloc] initWithData:data];
                         
-                        NSLog(@"FontFile stream: %@", [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding]);
-                        if (data.length > 0 && mapper == nil) {
-                            NSLog(@"Error decode FontFile3 stream!");
+                        for (NSNumber *code in mapper.map.allKeys) {
+                            [_charToUnicode setObject:mapper.map[code] forKey:code];
                         }
+                        NSLog(@"FontFile3 stream(%ld bytes): %@", (unsigned long)data.length, [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding]);
+                    }
+                    
+                } else if (CGPDFDictionaryGetObject(fontDecriptor, kFontFile2, &FontFile)) {
+                    
+                    CGPDFStreamRef FontFileStream;
+                    if (CGPDFObjectGetValue(FontFile, kCGPDFObjectTypeStream, &FontFileStream)) {
+                        
+                        CFDataRef dataRef = CGPDFStreamCopyData(FontFileStream, NULL);
+                        NSData *data = (__bridge NSData*)dataRef;
+                        ToUnicodeMapper *mapper = [[ToUnicodeMapper alloc] initWithData:data];
+                        
+                        for (NSNumber *code in mapper.map.allKeys) {
+                            [_charToUnicode setObject:mapper.map[code] forKey:code];
+                        }
+                        NSLog(@"FontFile2 stream(%ld bytes): %@", (unsigned long)data.length, [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding]);
                     }
                 }
     
@@ -349,52 +389,30 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
 {
     NSUInteger length = CGPDFArrayGetCount(widthsArray);
     int idx = 0;
-    CGPDFObjectRef nextObject = nil;
     
     while (idx < length)
     {
         CGPDFInteger baseCid = 0;
-        CGPDFArrayGetInteger(widthsArray, idx++, &baseCid);
+        if (!CGPDFArrayGetInteger(widthsArray, idx++, &baseCid)) {
+            NSLog(@"ERROR: parsing Widths of CID font. Current idx:%uld/%uld", idx, length);
+            break;
+        }
         
         CGPDFObjectRef integerOrArray = nil;
-        CGPDFInteger firstCharacter = 0;
         CGPDFArrayGetObject(widthsArray, idx++, &integerOrArray);
         
         if (CGPDFObjectGetType(integerOrArray) == kCGPDFObjectTypeInteger)
         {
-            // [ first last width ]
+            // [ first last width ]             cfirst clast w
             CGPDFInteger maxCid;
             CGPDFInteger glyphWidth;
             CGPDFObjectGetValue(integerOrArray, kCGPDFObjectTypeInteger, &maxCid);
             CGPDFArrayGetInteger(widthsArray, idx++, &glyphWidth);
             [self setWidthsFrom:baseCid to:maxCid width:glyphWidth];
-            
-            // If the second item is an array, the sequence
-            // defines widths on the form [ first list-of-widths ]
-            CGPDFArrayRef characterWidths;
-            
-            if (!CGPDFObjectGetValue(nextObject, kCGPDFObjectTypeArray, &characterWidths))
-            {
-                break;
-            }
-            
-            NSUInteger widthsCount = CGPDFArrayGetCount(characterWidths);
-            
-            for (int index = 0; index < widthsCount ; index++)
-            {
-                CGPDFInteger width;
-                
-                if (CGPDFArrayGetInteger(characterWidths, index, &width))
-                {
-                    NSNumber *key = [NSNumber numberWithInt: (int)firstCharacter + index];
-                    NSNumber *val = [NSNumber numberWithInt: (int)width];
-                    [_cidWidths setObject:val forKey:key];
-                }
-            }
         }
         else
         {
-            // [ first list-of-widths ]
+            // [ first list-of-widths ]         c [w1 w2 ... wn]
             CGPDFArrayRef glyphWidths;
             CGPDFObjectGetValue(integerOrArray, kCGPDFObjectTypeArray, &glyphWidths);
             [self setWidthsWithBase:baseCid array:glyphWidths];
@@ -464,8 +482,9 @@ CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderSta
         if (width) {
             w0 = width.floatValue;
         } else {
-            NSLog(@"ERROR: [%@] get char width index: %zu, charCode %d widthsLength %zu", font.name, charIndex, code, countCodes);
-            w0 = font->defaultWidth;
+            NSString *letter = font.charToUnicode[@(code)];
+            NSLog(@"ERROR: [%@] get char width index: %zu, charCode %d:%@ widthsLength %zu", font.name, charIndex, code, letter, countCodes);
+            w0 = font->defaultWidth * 0.5;
         }
     }
     
