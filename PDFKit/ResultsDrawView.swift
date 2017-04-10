@@ -15,25 +15,25 @@ class ResultsDrawView: UIView {
             setNeedsDisplay()
         }
     }
-    var pageSize: CGSize = CGSizeZero
+    var pageSize: CGSize = CGSize.zero
     var scale: CGFloat = 1
     
 
-    private var drawAtttributes = [NSFontAttributeName: UIFont.systemFontOfSize(12), NSBackgroundColorAttributeName: UIColor.yellowColor().colorWithAlphaComponent(0.9), NSForegroundColorAttributeName: UIColor.blackColor().colorWithAlphaComponent(0.5)]
+    fileprivate var drawAtttributes = [NSFontAttributeName: UIFont.systemFont(ofSize: 12), NSBackgroundColorAttributeName: UIColor.yellow.withAlphaComponent(0.9), NSForegroundColorAttributeName: UIColor.black.withAlphaComponent(0.5)]
     
 
-    override func drawRect(rect: CGRect) {
+    override func draw(_ rect: CGRect) {
         let ctx = UIGraphicsGetCurrentContext()!
 
-        CGContextSetLineWidth(ctx, 2)
+        ctx.setLineWidth(2)
         
-        for (_,res) in searchResults.enumerate() {
+        for (_,res) in searchResults.enumerated() {
 
-            var textRect = res.CGRectValue()
+            var textRect = res.cgRectValue
             textRect.origin.y -= textRect.size.height - 2
 
-            CGContextSetFillColor(ctx, CGColorGetComponents(UIColor(colorLiteralRed: 0, green: 1, blue: 0, alpha: 0.38).CGColor))
-            CGContextFillRect(ctx, textRect)
+            ctx.setFillColor(UIColor(colorLiteralRed: 0, green: 1, blue: 0, alpha: 0.38).cgColor.components!)
+            ctx.fill(textRect)
             
 //            (i.description as NSString).drawInRect(textRect, withAttributes: [NSForegroundColorAttributeName: UIColor.redColor(), NSFontAttributeName: UIFont.boldSystemFontOfSize(16)])
         }

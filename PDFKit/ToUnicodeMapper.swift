@@ -120,11 +120,11 @@ class ToUnicodeMapper: NSObject {
     
         ];
 
-    private let fontMap: String
-    private(set) var map = [Int:String]()
+    fileprivate let fontMap: String
+    fileprivate(set) var map = [Int:String]()
     
-    init?(data: NSData) {
-        guard let fontMapString = NSString(data: data, encoding: NSASCIIStringEncoding) else {
+    init?(data: Data) {
+        guard let fontMapString = NSString(data: data, encoding: String.Encoding.ascii.rawValue) else {
             return nil
         }
         fontMap = fontMapString as String
@@ -133,34 +133,34 @@ class ToUnicodeMapper: NSObject {
         prepareData(fontMap)
     }
     
-    private func prepareData(fontMap: String) {
+    fileprivate func prepareData(_ fontMap: String) {
 
         var mapCopy = fontMap
 
-        while let start = mapCopy.rangeOfString("beginbfrange"), let end = mapCopy.rangeOfString("endbfrange") {
-            var data = mapCopy.substringWithRange(start.endIndex ..< end.startIndex)
-            data = data.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
+        while let start = mapCopy.range(of: "beginbfrange"), let end = mapCopy.range(of: "endbfrange") {
+            var data = mapCopy.substring(with: start.upperBound ..< end.lowerBound)
+            data = data.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
             
-            let lines = data.componentsSeparatedByString("\n")
-            let regex = try! NSRegularExpression(pattern: "<(\\w+)>", options: .CaseInsensitive)
+            let lines = data.components(separatedBy: "\n")
+            let regex = try! NSRegularExpression(pattern: "<(\\w+)>", options: .caseInsensitive)
             
             for line in lines {
                 
-                let results = regex.matchesInString(line, options: NSMatchingOptions(rawValue: 0), range: NSMakeRange(0, line.characters.count))
+                let results = regex.matches(in: line, options: NSRegularExpression.MatchingOptions(rawValue: 0), range: NSMakeRange(0, line.characters.count))
                 
                 if results.count == 3 {
-                    let startIndexStr = (line as NSString).substringWithRange(NSMakeRange(results[0].range.location+1, results[0].range.length-2))
-                    let endIndexStr = (line as NSString).substringWithRange(NSMakeRange(results[1].range.location+1, results[1].range.length-2))
+                    let startIndexStr = (line as NSString).substring(with: NSMakeRange(results[0].range.location+1, results[0].range.length-2))
+                    let endIndexStr = (line as NSString).substring(with: NSMakeRange(results[1].range.location+1, results[1].range.length-2))
                     let startIndex = strtol(startIndexStr, nil, 16)
                     let endIndex = strtol(endIndexStr, nil, 16)
                     
-                    let unicodeStr = (line as NSString).substringWithRange(NSMakeRange(results[2].range.location+1, results[2].range.length-2))
+                    let unicodeStr = (line as NSString).substring(with: NSMakeRange(results[2].range.location+1, results[2].range.length-2))
                     let uniChar = strtol(unicodeStr, nil, 16)
                     
                     var count = 0
                     for i in startIndex...endIndex {
                         if uniChar+count < Int(UInt16.max) {
-                            self.map[i] = "\(Character(UnicodeScalar(uniChar+count)))"
+                            self.map[i] = "\(Character(UnicodeScalar(uniChar+count)!))"
                         } else {
                             NSLog("error: value is outside of Unicode codespace")
                         }
@@ -171,30 +171,30 @@ class ToUnicodeMapper: NSObject {
                 }
             }
             
-            mapCopy = mapCopy.substringFromIndex(end.endIndex)
+            mapCopy = mapCopy.substring(from: end.upperBound)
         }
         
         mapCopy = fontMap
-        while let start = mapCopy.rangeOfString("beginbfchar"), let end = mapCopy.rangeOfString("endbfchar") {
-            var data = mapCopy.substringWithRange(start.endIndex ..< end.startIndex)
-            data = data.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
+        while let start = mapCopy.range(of: "beginbfchar"), let end = mapCopy.range(of: "endbfchar") {
+            var data = mapCopy.substring(with: start.upperBound ..< end.lowerBound)
+            data = data.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
             
-            let lines = data.componentsSeparatedByString("\n")
-            let regex = try! NSRegularExpression(pattern: "<(\\w+)>", options: .CaseInsensitive)
+            let lines = data.components(separatedBy: "\n")
+            let regex = try! NSRegularExpression(pattern: "<(\\w+)>", options: .caseInsensitive)
             
             for line in lines {
                 
-                let results = regex.matchesInString(line, options: NSMatchingOptions(rawValue: 0), range: NSMakeRange(0, line.characters.count))
+                let results = regex.matches(in: line, options: NSRegularExpression.MatchingOptions(rawValue: 0), range: NSMakeRange(0, line.characters.count))
                 
                 if results.count == 2 {
-                    let codeStr = (line as NSString).substringWithRange(NSMakeRange(results[0].range.location+1, results[0].range.length-2))
+                    let codeStr = (line as NSString).substring(with: NSMakeRange(results[0].range.location+1, results[0].range.length-2))
                     let code = strtol(codeStr, nil, 16)
                     
-                    let unicodeStr = (line as NSString).substringWithRange(NSMakeRange(results[1].range.location+1, results[1].range.length-2))
+                    let unicodeStr = (line as NSString).substring(with: NSMakeRange(results[1].range.location+1, results[1].range.length-2))
                     let uniChar = strtol(unicodeStr, nil, 16)
                     
                     if uniChar < Int(UInt16.max) {
-                        self.map[code] = "\(Character(UnicodeScalar(uniChar)))"
+                        self.map[code] = "\(Character(UnicodeScalar(uniChar)!))"
                     } else {
                         NSLog("error: value is outside of Unicode codespace")
                     }
@@ -203,7 +203,7 @@ class ToUnicodeMapper: NSObject {
                 }
             }
             
-            mapCopy = mapCopy.substringFromIndex(end.endIndex)
+            mapCopy = mapCopy.substring(from: end.upperBound)
         }
         
         map[0] = ""

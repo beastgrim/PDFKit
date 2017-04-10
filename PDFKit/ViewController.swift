@@ -12,8 +12,8 @@ class ViewController: UIViewController {
     
     @IBOutlet var drawResultsView: ResultsDrawView! {
         didSet {
-            drawResultsView.opaque = false
-            drawResultsView.backgroundColor = UIColor.clearColor()
+            drawResultsView.isOpaque = false
+            drawResultsView.backgroundColor = UIColor.clear
         }
     }
 
@@ -21,26 +21,24 @@ class ViewController: UIViewController {
         super.viewDidLoad()
     }
 
-    override func viewDidAppear(animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
         openTestPDF()
     }
 
     
-    private func openTestPDF() {
-//        guard let pdfPath = NSBundle.mainBundle().pathForResource("Untitled", ofType: "pdf") else {
-//        guard let pdfPath = NSBundle.mainBundle().pathForResource("unsearch", ofType: "pdf") else {
-//        guard let pdfPath = NSBundle.mainBundle().pathForResource("crash", ofType: "pdf") else {
-//        guard let pdfPath = NSBundle.mainBundle().pathForResource("failsearch_resolved", ofType: "pdf") else {
-//        guard let pdfPath = NSBundle.mainBundle().pathForResource("sample2", ofType: "pdf") else {
-//        guard let pdfPath = NSBundle.mainBundle().pathForResource("PDFReference", ofType: "pdf") else {failhighlight
-        guard let pdfPath = NSBundle.mainBundle().pathForResource("failhighlight", ofType: "pdf") else {
-//        guard let pdfPath = NSBundle.mainBundle().pathForResource("failhighlight2", ofType: "pdf") else {
-//        guard let pdfPath = NSBundle.mainBundle().pathForResource("failhighlight3", ofType: "pdf") else {
+    fileprivate func openTestPDF() {
+//        guard let pdfPath = Bundle.main.path(forResource: "test", ofType: "pdf") else {
+//        guard let pdfPath = Bundle.main.path(forResource:"unsearch", ofType: "pdf") else {
+//        guard let pdfPath = Bundle.main.path(forResource: "crash", ofType: "pdf") else {
+//        guard let pdfPath = Bundle.main.path(forResource: "failsearch_resolved", ofType: "pdf") else {
+//        guard let pdfPath = Bundle.main.path(forResource: "failhighlight", ofType: "pdf") else {
+//        guard let pdfPath = Bundle.main.path(forResource: "check", ofType: "pdf") else {
+        guard let pdfPath = Bundle.main.path(forResource: "failsearch", ofType: "pdf") else {
           return
         }
-        guard let pdfData = NSData(contentsOfFile: pdfPath) else {
+        guard let pdfData = try? Data(contentsOf: URL(fileURLWithPath: pdfPath)) else {
             return
         }
         guard let document = PDFDocument(data: pdfData) else {
@@ -49,16 +47,16 @@ class ViewController: UIViewController {
         
         let pageIndex = 2
         
-        if let pdfPageView = document.viewForPageNumber(pageIndex) {
+        if let pdfPageView = document.view(forPageNumber: pageIndex) {
             drawResultsView.pageSize = pdfPageView.bounds.size;
             view.addSubview(pdfPageView)
         }
 
         let results = document.searchText("на", onPage: UInt(pageIndex))
         
-        view.bringSubviewToFront(drawResultsView)
+        view.bringSubview(toFront: drawResultsView)
         drawResultsView.layer.borderWidth = 2
-        drawResultsView.layer.borderColor = UIColor.blueColor().CGColor
+        drawResultsView.layer.borderColor = UIColor.blue.cgColor
         drawResultsView.searchResults = results
         
         NSLog("Success open PDF, number pages is \(document.numberOfPages). Results: \(results)")
