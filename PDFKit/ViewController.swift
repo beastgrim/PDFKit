@@ -35,8 +35,9 @@ class ViewController: UIViewController {
 //        guard let pdfPath = Bundle.main.path(forResource: "failsearch_resolved", ofType: "pdf") else {
 //        guard let pdfPath = Bundle.main.path(forResource: "failhighlight", ofType: "pdf") else {
 //        guard let pdfPath = Bundle.main.path(forResource: "check", ofType: "pdf") else {
-        guard let pdfPath = Bundle.main.path(forResource: "failsearch", ofType: "pdf") else {
-          return
+//        guard let pdfPath = Bundle.main.path(forResource: "failsearch", ofType: "pdf") else {
+        guard let pdfPath = Bundle.main.path(forResource: "offset", ofType: "pdf") else {
+        return
         }
         guard let pdfData = try? Data(contentsOf: URL(fileURLWithPath: pdfPath)) else {
             return
@@ -45,14 +46,14 @@ class ViewController: UIViewController {
             return
         }
         
-        let pageIndex = 2
+        let pageIndex = 7
         
         if let pdfPageView = document.view(forPageNumber: pageIndex) {
             drawResultsView.pageSize = pdfPageView.bounds.size;
             view.addSubview(pdfPageView)
         }
 
-        let results = document.searchText("на", onPage: UInt(pageIndex))
+        let results = document.searchText("нок", onPage: UInt(pageIndex))
         
         view.bringSubview(toFront: drawResultsView)
         drawResultsView.layer.borderWidth = 2

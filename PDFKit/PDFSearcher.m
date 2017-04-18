@@ -280,7 +280,7 @@ void handleFontDictionary(const char *key, CGPDFObjectRef ob, void *info) {
 // T*
 void newLine(CGPDFScannerRef inScanner, void *userInfo) {
     PDFSearcher * searcher = (__bridge PDFSearcher *)userInfo;
-    
+    [searcher.unicodeContent appendFormat:@"\n"];
     [searcher.renderingState newLine];
 }
 // TD
@@ -290,6 +290,7 @@ void newLineSetLeading(CGPDFScannerRef inScanner, void *userInfo) {
     CGPDFReal tx, ty;
     CGPDFScannerPopNumber(inScanner, &ty);
     CGPDFScannerPopNumber(inScanner, &tx);
+    [searcher.unicodeContent appendFormat:@"\n"];
     [searcher.renderingState newLineWithLeading:-ty indent:tx save:YES];
 }
 // Td
@@ -299,6 +300,7 @@ void newLineWithLeading(CGPDFScannerRef inScanner, void *userInfo) {
     CGPDFReal tx, ty;
     CGPDFScannerPopNumber(inScanner, &ty);
     CGPDFScannerPopNumber(inScanner, &tx);
+    [searcher.unicodeContent appendFormat:@"\n"];
     [searcher.renderingState newLineWithLeading:-ty indent:tx save:NO];
 }
 // Tm
@@ -549,7 +551,13 @@ float getNumericalValue(CGPDFObjectRef pdfObject, CGPDFObjectType type) {
     return 0;
 }
 
+void printPDFObjectWithOffset(CGPDFObjectRef pdfObject, uint8_t offset);
 void printPDFObject(CGPDFObjectRef pdfObject) {
+    printPDFObjectWithOffset(pdfObject, 0);
+}
+void printPDFObjectWithOffset(CGPDFObjectRef pdfObject, uint8_t offset) {
+
+    const char *space = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
     
     CGPDFObjectType type = CGPDFObjectGetType(pdfObject);
 
@@ -557,59 +565,68 @@ void printPDFObject(CGPDFObjectRef pdfObject) {
         case kCGPDFObjectTypeName: {
             char * name;
             CGPDFObjectGetValue(pdfObject, kCGPDFObjectTypeName, &name);
-            printf("Type: name, Value: %s\n", name);
-            
+            printf("%.*s'%s'\n", offset, space, name);
         } break;
             
         case kCGPDFObjectTypeInteger: {
             CGPDFInteger intiger;
             CGPDFObjectGetValue(pdfObject, kCGPDFObjectTypeInteger, &intiger);
-            printf("Type: intiger, Value: %ld\n", intiger);
+            printf("%.*s %ld\n", offset, space, intiger);
         } break;
             
         case kCGPDFObjectTypeReal: {
             CGPDFReal real;
             CGPDFObjectGetValue(pdfObject, kCGPDFObjectTypeReal, &real);
-            printf("Type: real, Value: %f\n", real);
+            printf("%.*s %f\n", offset, space, real);
         } break;
             
         case kCGPDFObjectTypeDictionary: {
-            printf("\nType: dictionary, VALUES: \n");
+            uint8_t dictOffset = offset+1;
+            printf("\n%.*s { \n", dictOffset, space);
 
             CGPDFDictionaryRef dict;
             CGPDFObjectGetValue(pdfObject, kCGPDFObjectTypeDictionary, &dict);
-            CGPDFDictionaryApplyFunction(dict, printCGPDFDictionary, nil);
-            printf("\n");
+            CGPDFDictionaryApplyFunction(dict, printCGPDFDictionary, &dictOffset);
+            
+            printf("\n%.*s} \n", dictOffset, space);
 
         } break;
             
         case kCGPDFObjectTypeNull: {
-            printf("Type: Null, Value: null\n");
+            printf("%.*s null\n", offset, space);
 
         } break;
             
         case kCGPDFObjectTypeArray: {
+            
             CGPDFArrayRef array;
+            uint8_t arrOffset = offset+2;
             CGPDFObjectGetValue(pdfObject, kCGPDFObjectTypeArray, &array);
-            printf("\nType: array, VALUES: \n");
+            printf("\n%.*s [\n", arrOffset, space);
 
             for (int i = 0; i < CGPDFArrayGetCount(array); i++) {
-                printf("\t[%d]: ", i);
+                printf("%.*s [%d]: ", arrOffset, space, i);
                 CGPDFObjectRef object = nil;
                 if (CGPDFArrayGetObject(array, i, &object)) {
-                    printPDFObject(object);
+                    
+                    CGPDFObjectType type = CGPDFObjectGetType(object);
+                    if (type == kCGPDFObjectTypeArray || type == kCGPDFObjectTypeDictionary) {
+                        printPDFObjectWithOffset(object, arrOffset);
+                    } else {
+                        printPDFObjectWithOffset(object, 0);
+                    }
                     printf("\n");
                 } else {
                     printf("fail get object\n");
                 }
             }
-            printf("\n");
+            printf("%.*s]\n", arrOffset, space);
         }
             
         case kCGPDFObjectTypeBoolean: {
             CGPDFBoolean b;
             CGPDFObjectGetValue(pdfObject, kCGPDFObjectTypeBoolean, &b);
-            printf("Type: bool, Value: %d\n", b);
+            printf("%.*s%s\n", offset, space, (b == 0 ? "false" : "true"));
 
         } break;
             
@@ -617,7 +634,7 @@ void printPDFObject(CGPDFObjectRef pdfObject) {
             CGPDFStringRef str;
             CGPDFObjectGetValue(pdfObject, kCGPDFObjectTypeString, &str);
             NSString *data = CFBridgingRelease(CGPDFStringCopyTextString(str));
-            printf("Type: string, Value: %s\n", data.UTF8String);
+            printf("%.*s\"%s\"\n", offset, space, data.UTF8String);
 
         } break;
             
@@ -629,19 +646,28 @@ void printPDFObject(CGPDFObjectRef pdfObject) {
             CFDataRef xmlData = CGPDFStreamCopyData(stream, format);
             NSData * data = (__bridge NSData*)xmlData;
  
-            printf("Type: stream, Size: %lu bytes\n", (unsigned long)data.length);
+            printf("%.*sType: stream, Size: %lu bytes\n", offset, space, (unsigned long)data.length);
 
         } break;
             
         default: {
-            printf("Type: UNKNOWN");
+            printf("%.*sType: UNKNOWN", offset, space);
         } break;
     }
 }
 
-void printCGPDFDictionary(const char *key, CGPDFObjectRef ob, void *info) {
-    printf("\t[%s]: ", key);
-    printPDFObject(ob);
+void printCGPDFDictionary(const char *key, CGPDFObjectRef obj, void *info) {
+    uint8_t *offsetPointer = info;
+    uint8_t offset = *offsetPointer;
+    const char *space = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
+
+    printf("%.*s %s: ", offset, space, key);
+    CGPDFObjectType type = CGPDFObjectGetType(obj);
+    if (type == kCGPDFObjectTypeDictionary || type == kCGPDFObjectTypeArray) {
+        printPDFObjectWithOffset(obj, offset+2);
+    } else {
+        printPDFObjectWithOffset(obj, 0);
+    }
 }
 
 void printTransform(CGAffineTransform t) {

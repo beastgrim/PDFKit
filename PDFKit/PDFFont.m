@@ -119,8 +119,6 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
         CGPDFDictionaryRef encodingDict;
         if (CGPDFDictionaryGetDictionary(fontDict, kEncodingKey, &encodingDict)) {
             
-            NSDictionary *standartCirillicGlifs = [ToUnicodeMapper standardCyrillicGlyphNames];
-            
             CGPDFObjectRef baseEncodingObj;
             if (CGPDFDictionaryGetObject(encodingDict, kBaseEncodingKey, &baseEncodingObj)) {
                 
@@ -132,31 +130,8 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
             
             CGPDFArrayRef differences;
             if (CGPDFDictionaryGetArray(encodingDict, kDifferencesKey, &differences)) {
-                
-                NSInteger curDifIndex = 0;
-
-                for (int i = 0; i < CGPDFArrayGetCount(differences); i++) {
-
-                    CGPDFObjectRef obj;
-                    CGPDFArrayGetObject(differences, i, &obj);
-                    
-                    CGPDFObjectType type = CGPDFObjectGetType(obj);
-                    
-                    if (type == kCGPDFObjectTypeInteger) {
-                        CGPDFInteger val;
-                        CGPDFObjectGetValue(obj, kCGPDFObjectTypeInteger, &val);
-                        curDifIndex = val;
-                        
-                    } else if (type == kCGPDFObjectTypeName) {
-                        char * glif;
-                        CGPDFObjectGetValue(obj, kCGPDFObjectTypeName, &glif);
-
-                        NSString *key = [NSString stringWithFormat:@"%s", glif];
-
-                        _charToUnicode[@(curDifIndex)] = standartCirillicGlifs[key];
-                        curDifIndex++;
-                    }
-                }
+    
+                [self decodeDifferences:differences];
             }
 
         }
@@ -281,14 +256,50 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
 
 #pragma mark - Base
 
+- (void) decodeDifferences:(CGPDFArrayRef)array {
+    NSDictionary *standartCirillicGlifs = [ToUnicodeMapper standardCyrillicGlyphNames];
+
+    NSInteger curDifIndex = 0;
+    
+    for (int i = 0; i < CGPDFArrayGetCount(array); i++) {
+        
+        CGPDFObjectRef obj;
+        CGPDFArrayGetObject(array, i, &obj);
+        
+        CGPDFObjectType type = CGPDFObjectGetType(obj);
+        
+        if (type == kCGPDFObjectTypeInteger) {
+            CGPDFInteger val;
+            CGPDFObjectGetValue(obj, kCGPDFObjectTypeInteger, &val);
+            curDifIndex = val;
+            
+        } else if (type == kCGPDFObjectTypeName) {
+            char * glif;
+            CGPDFObjectGetValue(obj, kCGPDFObjectTypeName, &glif);
+            
+            NSString *key = [NSString stringWithFormat:@"%s", glif];
+            
+            if ([key hasPrefix:@"uni"]) {
+                NSString * codeStr = [key substringFromIndex:3];
+                unichar code = strtol([codeStr UTF8String], nil, 16);
+                _charToUnicode[@(curDifIndex)] = [NSString stringWithFormat:@"%C", code];
+            } else {
+                _charToUnicode[@(curDifIndex)] = standartCirillicGlifs[key];
+            }
+            
+            curDifIndex++;
+        }
+    }
+}
+
 
 #pragma mark Encoding
 - (void)setEncodingNamed:(NSString *)encodingName {
     
-    if ([@"MacRomanEncoding" isEqualToString:encodingName]) {
+    if ([encodingName isEqualToString:@"MacRomanEncoding"]) {
         encoding = MacRomanEncoding;
         
-    } else if ([@"WinAnsiEncoding" isEqualToString:encodingName]) {
+    } else if ([encodingName isEqualToString:@"WinAnsiEncoding"]) {
         encoding = WinAnsiEncoding;
         
     } else {
