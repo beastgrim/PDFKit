@@ -12,6 +12,8 @@
 #import "RenderingState.h"
 
 
+#define DEBUG_MODE 0
+
 void stringAndSpacesCallback(CGPDFScannerRef inScanner, void *userInfo);
 void stringCallback(CGPDFScannerRef inScanner, void *userInfo);
 void fontInfoCallback(CGPDFScannerRef inScanner, void *userInfo);
@@ -71,7 +73,6 @@ void printPDFObject(CGPDFObjectRef pdfObject);
     NSInteger foundIndex;
     NSInteger searchLength;
     CGRect searchRect;
-    CGSize pageSize;
 }
 
 @synthesize fontInfo, fontByFontName = _fontByFontName, renderingStateStack = _renderingStateStack, unicodeContent = _unicodeContent;
@@ -138,12 +139,13 @@ void printPDFObject(CGPDFObjectRef pdfObject);
         searchLength = searchStr.length;
         CGRect cropBoxRect = CGPDFPageGetBoxRect(inPage, kCGPDFCropBox);
         CGRect mediaBoxRect = CGPDFPageGetBoxRect(inPage, kCGPDFMediaBox);
-        pageSize = cropBoxRect.size;
-        
-        CGFloat diffY = (mediaBoxRect.size.height - cropBoxRect.size.height)/2;
-        CGFloat diffX = (mediaBoxRect.size.width - cropBoxRect.size.width)/2;
+
         // Initial value: a matrix that transforms default user coordinates to device coordinates.
-        self.renderingState.ctm = CGAffineTransformMake(1, 0, 0, -1, -diffX, pageSize.height + diffY);
+        CGFloat tx = cropBoxRect.origin.x;
+        CGFloat ty = cropBoxRect.origin.y;
+        self.renderingState.ctm = CGAffineTransformMake(1, 0, 0, -1, 0, mediaBoxRect.size.height);
+        self.renderingState.ctm = CGAffineTransformTranslate(self.renderingState.ctm, -tx*2, ty*2);
+        
         
         [self fontCollectionWithPage:inPage];
         
@@ -173,49 +175,102 @@ const char *kFontKey = "Font";
     return _fontByFontName[currentFontName];
 }
 
-- (void) handlePdfString:(CGPDFStringRef)pdfString {
+- (void) handlePdfString:(CGPDFStringRef)pdfString withTj:(CGPDFReal)tj {
     
     PDFFont *font = [self currentFont];
     RenderingState *renderState = self.renderingState;
+    CGAffineTransform tm = renderState.textMatrix;
+    NSMutableString *text = [NSMutableString new];
     
     __weak typeof(self) weakSelf = self;
-    [font decodePDFString:pdfString renderingState:renderState callback:^(NSString *character, CGSize size) {
+    [font decodePDFString:pdfString withTj:tj*1000 renderingState:renderState callback:^(NSString *character, CGSize glifSize) {
         [weakSelf.unicodeContent appendFormat:@"%@", character];
-
-        NSRange currentRange = NSMakeRange(foundIndex, 1);
-        BOOL textMatrixUpdated = NO;
         
-        if ([[character uppercaseString] isEqualToString:[searchStr substringWithRange:currentRange]]) {
+        [text appendString:character];
+#if DEBUG_MODE == 1
+        CGAffineTransform trm = [weakSelf getTextRenderingMatrix];
+        
+        searchRect = CGRectZero;
+        searchRect.size.height = glifSize.height;
+        searchRect.size.width = glifSize.width;
+        searchRect.origin.x = trm.tx;
+        searchRect.origin.y = trm.ty;
+        
+        [weakSelf savePDFSearchRect:searchRect];
+        [weakSelf translateTextPositionWithGlifSize:glifSize tj:tj];
+        
+        return;
+#else
+        NSRange currentRange = NSMakeRange(foundIndex, 1);
+        BOOL isNextCharFound = [[character uppercaseString] isEqualToString:[searchStr substringWithRange:currentRange]];
+        BOOL textMatrixShouldBeUpdated = YES;
+        
+        if (isNextCharFound) {
             foundIndex++;
             
-            if (foundIndex == 1) {
+            if (foundIndex == 1) {  // save X position and HEIGHT of search text
                 
                 CGAffineTransform trm = [weakSelf getTextRenderingMatrix];
-
+                
                 searchRect = CGRectZero;
-                searchRect.size = size;
+                searchRect.size = glifSize;
                 searchRect.origin.x = trm.tx;
                 searchRect.origin.y = trm.ty;
             }
             
             if (foundIndex == searchLength) {       // save result and start new search
-                [weakSelf translateTextPosition:CGSizeMake(size.width, 0)];
-                textMatrixUpdated = YES;
+                
+                [weakSelf translateTextPosition:CGSizeMake(glifSize.width, 0)];
                 
                 CGAffineTransform trm = [weakSelf getTextRenderingMatrix];
-                searchRect.size.width = MAX(10, trm.tx - searchRect.origin.x);
-
+                
+                CGFloat offsetX = trm.tx - searchRect.origin.x;
+                if (offsetX < 0) { // we are maybe on other line
+                    NSLog(@"WARNING: start X of serach text is greater then end X of search text!");
+                }
+                searchRect.size.width = MAX(5, offsetX);
+                
                 [weakSelf savePDFSearchRect:searchRect];
                 foundIndex = 0;
+                
+                [weakSelf translateTextPositionWithTj:tj];
+                
+                textMatrixShouldBeUpdated = NO;
             }
             
         } else {    // reset search
             foundIndex = 0;
         }
-        if (textMatrixUpdated == NO) {
-            [weakSelf translateTextPosition:CGSizeMake(size.width, 0)];
+        if (textMatrixShouldBeUpdated) {
+            [weakSelf translateTextPositionWithGlifSize:glifSize tj:tj];
         }
+#endif
+        
+    } stringWidthCallback:^(CGFloat width) {
+        renderState.textMatrix = tm;
+        [weakSelf translateTextPosition:CGSizeMake(width, 0)];
+//        NSLog(@"Totlal string width: %@ %f", text, width);
     }];
+}
+
+- (void) translateTextPositionWithTj:(CGFloat)tj {
+    RenderingState *renderState = self.renderingState;
+
+    CGPDFReal w0 = 0.0;
+    CGPDFReal Tfs = renderState.fontSize;
+    CGPDFReal Tc = renderState.characterSpacing;
+    CGPDFReal Tw = 0.0; // word spacing applied on glif width
+    CGPDFReal Th = renderState.horizontalScaling/100;
+    CGPDFReal tx = ((w0 - (tj/1000.0))*Tfs + Tc + Tw)*Th;
+//    CGPDFReal tx = ((w0 - tj/1000.0)*Tfs + Tc + Tw)*Th;
+    
+    [self translateTextPosition:CGSizeMake(tx, 0)];
+}
+
+- (void) translateTextPositionWithGlifSize:(CGSize)size tj:(CGFloat)tj {
+
+    [self translateTextPosition:CGSizeMake(size.width, 0)];
+    [self translateTextPositionWithTj:tj];
 }
 
 - (void) savePDFSearchRect:(CGRect)rect {
@@ -329,12 +384,15 @@ void fontInfoCallback(CGPDFScannerRef inScanner, void *userInfo)
     
     CGPDFReal fontSize;
     CGPDFScannerPopNumber(inScanner, &fontSize);
-    const char *fontName;
-    CGPDFScannerPopName(inScanner, &fontName);
+    const char *font_name;
+    CGPDFScannerPopName(inScanner, &font_name);
 //    NSLog(@"Font: %s size: %f", fontName, fontSize);
-//    [searcher.unicodeContent appendFormat:@"[%s]", fontName];
-    searcher->currentFontName = [NSString stringWithFormat:@"%s", fontName];
+    NSString *fontName = [NSString stringWithFormat:@"%s", font_name];
+    [searcher.unicodeContent appendFormat:@"[%@]", fontName];
+    searcher->currentFontName = fontName;
     searcher.renderingState.fontSize = fontSize;
+    PDFFont *font = searcher.fontByFontName[fontName];
+    searcher.renderingState.font = font;
 }
 // BT
 void startTextCallback(CGPDFScannerRef inScanner, void *userInfo) {
@@ -357,28 +415,53 @@ void stringAndSpacesCallback(CGPDFScannerRef inScanner, void *userInfo)
     CGPDFArrayRef array = getArray(inScanner);
     CGFloat currentFontSize = renderState.fontSize;
     
+//    const unsigned char * characterCodes = CGPDFStringGetBytePtr(pdfString);
+//    size_t count = CGPDFStringGetLength(pdfString);
+    BOOL didScanSpace = false;
+    CGPDFStringRef lastString = NULL;
+    
     for (int i = 0; i < CGPDFArrayGetCount(array); i++) {
         CGPDFObjectRef pdfObject = getObject(array, i);
+//        printf("Print stringAndSpacesCallback %d: \n", i);
+//        printPDFObject(pdfObject);
         CGPDFObjectType valueType = CGPDFObjectGetType(pdfObject);
         
         if (valueType == kCGPDFObjectTypeString) {  // did scan string
 
+            if (lastString) {
+                [searcher handlePdfString:lastString withTj:0];
+                lastString = NULL;
+            }
             CGPDFStringRef string = getStringValue(pdfObject);
-            [searcher handlePdfString:string];
-            
+            lastString = string;
+            didScanSpace = false;
+
         } else {    // did scan space
 
-            CGPDFReal space = getNumericalValue(pdfObject, valueType);
-            CGPDFReal Tfs = currentFontSize;
-            CGPDFReal Tc = renderState.characterSpacing;
-            CGPDFReal Tw = renderState.wordSpacing;
-            CGPDFReal Th = renderState.horizontalScaling / 100.0;
-         
-            // tx = ((w0 - (Tj/1000))*Tfs + Tc + Tw)*Th
-            CGPDFReal width = ((0 - (space / 1000.0))*Tfs + Tc + Tw)*Th;
+            didScanSpace = true;
+            
+            CGPDFReal Tj = getNumericalValue(pdfObject, valueType);
   
-            [searcher translateTextPosition:CGSizeMake(width, 0)];
+            if (lastString) {
+                [searcher handlePdfString:lastString withTj:Tj];
+                lastString = NULL;
+            } else {
+                CGPDFReal Tfs = currentFontSize;
+                CGPDFReal Tc = renderState.characterSpacing;
+                CGPDFReal Tw = renderState.wordSpacing;
+                CGPDFReal Th = renderState.horizontalScaling / 100.0;
+                CGPDFReal w0 = 0.0;
+                
+                // tx = ((w0 - (Tj/1000))*Tfs + Tc + Tw)*Th
+                CGPDFReal tx = ((w0 - (Tj/1000))*Tfs + Tc + Tw)*Th;
+                
+                [searcher translateTextPosition:CGSizeMake(tx, 0)];
+            }
         }
+    }
+    
+    if (!didScanSpace && lastString) {
+        [searcher handlePdfString:lastString withTj:0];
     }
 }
 
@@ -387,21 +470,22 @@ void stringCallback(CGPDFScannerRef inScanner, void *userInfo)
     PDFSearcher *searcher = (__bridge PDFSearcher *)userInfo;
     CGPDFStringRef string = getString(inScanner);
     
-    [searcher handlePdfString:string];
+    [searcher handlePdfString:string withTj:0];
 }
 
-#pragma mark - Text State
+#pragma mark Text State
 void characterSpacing(CGPDFScannerRef pdfScanner, void *userInfo)
 {
     PDFSearcher *searcher = (__bridge PDFSearcher *)userInfo;
-    [searcher.renderingState setCharacterSpacing:getNumber(pdfScanner)];
-    
+    CGPDFReal spacing = getNumber(pdfScanner);
+    [searcher.renderingState setCharacterSpacing:spacing];
 }
 
 void wordSpacing(CGPDFScannerRef pdfScanner, void *userInfo)
 {
     PDFSearcher *searcher = (__bridge PDFSearcher *)userInfo;
-    [searcher.renderingState setWordSpacing:getNumber(pdfScanner)];
+    CGPDFReal spacing = getNumber(pdfScanner);
+    [searcher.renderingState setWordSpacing:spacing];
 }
 
 #pragma mark - Text Position Helpers
@@ -417,21 +501,20 @@ void wordSpacing(CGPDFScannerRef pdfScanner, void *userInfo)
 }
 
 - (CGAffineTransform)getTextRenderingMatrix {
-    RenderingState *r = self.renderingState;
+    // Trm is a temporary matrix; conceptually, it is recomputed before each glyph is painted during a text-showing operation.
+    RenderingState *renderState = self.renderingState;
+    CGFloat a = renderState.fontSize * renderState.horizontalScaling;
+    CGFloat b = 0;
+    CGFloat c = 0;
+    CGFloat d = renderState.fontSize;
+    CGFloat tx = 0;
+    CGFloat ty = renderState.textRise;
+    CGAffineTransform fontTransform = CGAffineTransformMake(a, b, c, d, tx, ty);
     
-    CGFloat fontSize = r.fontSize;
-    CGFloat horScaling = r.horizontalScaling;
-    CGFloat rise = r.textRise;
+    CGAffineTransform one = CGAffineTransformConcat(fontTransform, renderState.textMatrix);
+    CGAffineTransform rm = CGAffineTransformConcat(one, renderState.ctm);
     
-    CGAffineTransform Trm;
-    CGAffineTransform tf = CGAffineTransformMake(fontSize*horScaling, 0, 0, fontSize, 0, rise);
-    CGAffineTransform Tm = r.textMatrix;
-    CGAffineTransform CTM = r.ctm;
-    
-    Trm = CGAffineTransformConcat(tf, Tm);
-    Trm = CGAffineTransformConcat(Trm, CTM);
-    
-    return Trm;
+    return rm;
 }
 
 #pragma mark Graphics state operators
@@ -645,8 +728,13 @@ void printPDFObjectWithOffset(CGPDFObjectRef pdfObject, uint8_t offset) {
             CGPDFDataFormat *format = NULL;
             CFDataRef xmlData = CGPDFStreamCopyData(stream, format);
             NSData * data = (__bridge NSData*)xmlData;
- 
-            printf("%.*sType: stream, Size: %lu bytes\n", offset, space, (unsigned long)data.length);
+
+            NSString *decoded = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
+            if (decoded) {
+                printf("%.*sType: stream:\n%s\n", offset, space, decoded.UTF8String);
+            } else {
+                printf("%.*sType: stream, Size: %lu bytes\n", offset, space, (unsigned long)data.length);
+            }
 
         } break;
             

@@ -63,15 +63,24 @@
     
     CGPDFPageRef page = [self pageWithIndex:pageNumber];
     if (page) {
-        CGRect cropBoxRect = CGPDFPageGetBoxRect(page, kCGPDFCropBox);
-//        CGRect mediaBoxRect = CGPDFPageGetBoxRect(page, kCGPDFMediaBox);
-        CGSize size = cropBoxRect.size;
+//        CGRect cropBoxRect = CGPDFPageGetBoxRect(page, kCGPDFCropBox);
+        CGRect mediaBoxRect = CGPDFPageGetBoxRect(page, kCGPDFMediaBox);
         
-        CGRect contentRect = {CGPointZero, size};
+        CGRect contentRect = mediaBoxRect;
         ReaderContentView * contentView = [[ReaderContentView alloc] initWithFrame:contentRect PDFDocRef:documentRef fileURL:nil page:pageNumber+1 superviewWidth:[UIScreen mainScreen].bounds.size.width];
         return contentView;
     }
     return nil;
+}
+
+- (CGRect)cropBoxRectForPage:(NSInteger)pageNumber {
+    CGPDFPageRef page = [self pageWithIndex:pageNumber];
+    if (page) {
+        CGRect cropBoxRect = CGPDFPageGetBoxRect(page, kCGPDFCropBox);
+ 
+        return cropBoxRect;
+    }
+    return CGRectZero;
 }
 
 //- (NSArray<PDFFont *> *)getFontsForPageNumber:(NSInteger)pageNumber {

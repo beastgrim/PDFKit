@@ -162,7 +162,7 @@ class ToUnicodeMapper: NSObject {
                         if uniChar+count < Int(UInt16.max) {
                             self.map[i] = "\(Character(UnicodeScalar(uniChar+count)!))"
                         } else {
-                            NSLog("error: value is outside of Unicode codespace")
+                            NSLog("ERROR: value is outside of Unicode codespace")
                         }
                         count += 1
                     }

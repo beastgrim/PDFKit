@@ -42,6 +42,8 @@ typedef NS_ENUM (NSInteger, PDFFontType) {
 
 
 - (instancetype) initWithName:(NSString *)name fontDict:(CGPDFDictionaryRef)fontDict;
-- (void)decodePDFString:(CGPDFStringRef)pdfString renderingState:(RenderingState*)renderingState callback:(void(^)(NSString * character, CGSize size))callback;
+- (void)decodePDFString:(CGPDFStringRef)pdfString renderingState:(RenderingState*)renderingState callback:(void(^)(NSString * character, CGSize glifSize))callback;
+- (void)decodePDFString:(CGPDFStringRef)pdfString withTj:(CGPDFReal)Tj renderingState:(RenderingState*)renderingState callback:(void(^)(NSString * character, CGSize glifSize))callback;
+- (void)decodePDFString:(CGPDFStringRef)pdfString withTj:(CGPDFReal)Tj renderingState:(RenderingState*)renderingState callback:(void(^)(NSString * character, CGSize width))callback stringWidthCallback:(void(^)(CGFloat size))stringWithCallback;
 
 @end

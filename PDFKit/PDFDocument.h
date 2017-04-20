@@ -21,4 +21,7 @@
 - (NSArray <NSValue*> * __nonnull) searchText:(NSString * __nonnull)text onPage:(NSUInteger)pageNumber;
 - (ReaderContentView* __nullable) viewForPageNumber:(NSInteger)pageNumber;
 
+- (CGRect) cropBoxRectForPage:(NSInteger)pageNumber;
+
+
 @end

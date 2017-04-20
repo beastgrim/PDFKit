@@ -24,16 +24,17 @@ class ResultsDrawView: UIView {
 
     override func draw(_ rect: CGRect) {
         let ctx = UIGraphicsGetCurrentContext()!
-
-        ctx.setLineWidth(2)
+        ctx.setLineWidth(0.5)
         
         for (_,res) in searchResults.enumerated() {
 
             var textRect = res.cgRectValue
             textRect.origin.y -= textRect.size.height - 2
 
-            ctx.setFillColor(UIColor(colorLiteralRed: 0, green: 1, blue: 0, alpha: 0.38).cgColor.components!)
-            ctx.fill(textRect)
+//            ctx.setFillColor(UIColor(colorLiteralRed: 1, green: 0, blue: 0, alpha: 0.38).cgColor.components!)
+            ctx.setStrokeColor(UIColor(colorLiteralRed: 1, green: 0, blue: 0, alpha: 0.38).cgColor.components!)
+//            ctx.fill(textRect)
+            ctx.stroke(textRect)
             
 //            (i.description as NSString).drawInRect(textRect, withAttributes: [NSForegroundColorAttributeName: UIColor.redColor(), NSFontAttributeName: UIFont.boldSystemFontOfSize(16)])
         }

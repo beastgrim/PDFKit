@@ -26,6 +26,7 @@ const char *kCapHeight = "CapHeight"; // (Required) The vertical coordinate of t
 const char *kAscent = "Ascent"; // (Required) The maximum height above the baseline reached by glyphs in this font, excluding the height of glyphs for accented characters.
 const char *kMaxWidth = "MaxWidth"; // (Optional) The maximum width of glyphs in the font. Default value: 0.
 const char *kWidths = "Widths"; // (Required except for the standard 14 fonts; indirect reference preferred) An array of (LastChar − FirstChar + 1) widths, each element being the glyph width for the character whose code is FirstChar plus the array index. For character codes outside the range FirstChar to LastChar, the value of MissingWidth from the FontDescriptor entry for this font is used. The glyph widths are measured in units in which 1000 units corresponds to 1 unit in text space. These widths must be consistent with the actual widths given in the font program itself. (See implementation note 43 in Appendix H.) For more information on glyph widths and other glyph metrics, see Section 5.1.3, “Glyph Positioning and Metrics.”
+const char *kMissingWidth = "MissingWidth";
 const char *kFirstChar = "FirstChar"; // (Required except for the standard 14 fonts) The first character code defined in the font’s Widths array.
 const char *kLastChar = "LastChar"; // (Required except for the standard 14 fonts) The last character code defined in the font’s Widths array.
 
@@ -36,7 +37,18 @@ const char *kFontFile3 = "FontFile3";
 const char *kFontFile2 = "FontFile2";
 const char *kDescendantFonts = "DescendantFonts"; // A CID-keyed font, then, is the combination of a CMap with one or more CIDFonts, simple fonts, or composite fonts containing glyph descriptions. In PDF, a CID-keyed font is represented as a Type 0 font. It contains an Encoding entry whose value is a CMap dictionary, and its DescendantFonts array refer- ences the CIDFont or font dictionaries with which the CMap has been combined.
 const char *kCIDSystemInfo = "CIDSystemInfo"; // CIDSystemInfo entry is a dictionary that specifies the CIDFont’s character collection. Note that the CIDFont need not contain glyph descriptions for all the CIDs in a collection; it can contain a subset. In a CMap, the CIDSystemInfo entry is either a single dictionary or an array of dictionaries, depending on whether it associates codes with a single character collection or with multiple character collections; see Section 5.6.4, “CMaps.”
-
+const char *kFlags = "Flags";   // The value of the Flags entry in a font descriptor is an unsigned 32-bit integer containing flags specifying various characteristics of the font. Bit positions within the flag word are numbered from 1 (low-order) to 32 (high-order).
+/* Flags description
+ 1  FixedPitch  All glyphs have the same width (as opposed to proportional or variable-pitch fonts, which have different widths).
+ 2  Serif       Glyphs have serifs, which are short strokes drawn at an angle on the top and bottom of glyph stems (as opposed to sans serif fonts, which do not).
+ 3  Symbolic    Font contains characters outside the Adobe standard Latin character set. This flag and the Nonsymbolic flag cannot both be set or both be clear (see below).
+ 4  Script      Glyphs resemble cursive handwriting.
+ 6  Nonsymbolic Font uses the Adobe standard Latin character set or a subset of it (see below).
+ 7  Italic      Glyphs have dominant vertical strokes that are slanted.
+ 17 AllCap      Font contains no lowercase letters; typically used for display purposes such as
+ 18 SmallCap    Font contains both uppercase and lowercase letters. The uppercase letters are similar to ones in the regular version of the same typeface family. The glyphs for the lowercase letters have the same shapes as the corresponding uppercase letters, but they are sized and their proportions adjusted so that they have the same size and stroke weight as lowercase glyphs in the same typeface family.
+ 19 ForceBold
+ */
 
 typedef enum {
     UnknownEncoding = 0,
@@ -60,12 +72,15 @@ typedef enum {
 @implementation PDFFont {
     CGFloat defaultWidth;
     CGFloat avgWidth;
+    CGPDFInteger _missingWidth;
+    CGPDFInteger _flags;
     CharacterEncoding encoding;
     BOOL useDecode;
 }
 
 @synthesize type = _type, name = _name, spaceWidth = _spaceWidth, xHeight = _xHeight, capHeight = _capHeight, leading = _leading, firstChar = _firstChar, lastChar = _lastChar, widths = _widths, fontBBox = _fontBBox, bBoxRect = _bBoxRect, charSet = _charSet, cidWidths = _cidWidths, charToUnicode = _charToUnicode, ascent = _ascent;
-CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderState);
+CGPDFReal widthOfCharCode(unsigned char code, void *userInfo, void *renderState);
+CGPDFReal xOffsetAfterDrawingCode(unsigned char code, double Tj, void *userInfo, void *renderState);
 CGPDFReal fontHeight(void *pdfFont, void *renderState);
 
 
@@ -138,6 +153,15 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
         
         CGPDFDictionaryRef fontDecriptor;
         if (CGPDFDictionaryGetDictionary(fontDict, kFontDescriptorKey, &fontDecriptor)) {
+            
+            CGPDFInteger missingWidth;
+            if (CGPDFDictionaryGetInteger(fontDecriptor, kMissingWidth, &missingWidth)) {
+                _missingWidth = missingWidth;
+            }
+            CGPDFInteger flags;
+            if (CGPDFDictionaryGetInteger(fontDecriptor, kFlags, &flags)) {
+                _flags = flags;
+            }
             // try get Font File stream
             CGPDFObjectRef FontFile2;
             if (CGPDFDictionaryGetObject(fontDecriptor, kFontFile2, &FontFile2)) {
@@ -235,8 +259,14 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
             }
         }
     }
-    
-    printf("Init font %s toUnicodeMap %ld\n", name.UTF8String, (unsigned long)_charToUnicode.count);
+
+    printf("Init font %s toUnicodeMap %ld cidWidths: %s\n", name.UTF8String, (unsigned long)_charToUnicode.count, self.cidWidths.description.UTF8String);
+    printf("Widths: \n");
+    for (int i = 0; i < _widths.size; i++) {
+        NSString *letter = _charToUnicode[@(i)];
+        printf("\t[%d]\t'%s'\t%ld\n", i, letter.UTF8String, _widths.values[i]);
+    }
+//    printf("\n");
     useDecode = _charToUnicode.count > 0;
     return self;
 }
@@ -434,10 +464,19 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
 
 #pragma mark - Public
 
-- (void)decodePDFString:(CGPDFStringRef)pdfString renderingState:(RenderingState*)renderingState callback:(void(^)(NSString * character, CGSize size))callback {
+- (void)decodePDFString:(CGPDFStringRef)pdfString renderingState:(RenderingState *)renderingState callback:(void (^)(NSString *, CGSize))callback {
+    [self decodePDFString:pdfString withTj:0 renderingState:renderingState callback:callback];
+}
+- (void)decodePDFString:(CGPDFStringRef)pdfString withTj:(CGPDFReal)Tj renderingState:(RenderingState*)renderingState callback:(void(^)(NSString * character, CGSize glifSize))callback {
+    [self decodePDFString:pdfString withTj:0 renderingState:renderingState callback:callback stringWidthCallback:nil];
+}
+
+- (void)decodePDFString:(CGPDFStringRef)pdfString withTj:(CGPDFReal)Tj renderingState:(RenderingState*)renderingState callback:(void(^)(NSString * character, CGSize size))callback stringWidthCallback:(void(^)(CGFloat width))stringWithCallback {
     
     const unsigned char * characterCodes = CGPDFStringGetBytePtr(pdfString);
     size_t count = CGPDFStringGetLength(pdfString);
+    
+    CGPDFReal totalStringWidth = 0.0;
 
     for (int i = 0; i < count; i++) {
         
@@ -448,6 +487,11 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
 
         CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
         CGPDFReal height = fontHeight((__bridge void *)(self), (__bridge void *)(renderingState));
+        
+        CGPDFReal widthWithSpace = xOffsetAfterDrawingCode(code, Tj, (__bridge void *)(self), (__bridge void *)(renderingState));
+        totalStringWidth += widthWithSpace;
+
+        // The glyph widths are measured in units in which 1000 units corresponds to 1 unit in text space.
         CGSize size = CGSizeMake(width/1000.0, height/1000.0);
         
         if (useDecode) {
@@ -464,21 +508,26 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
                     
                 } else {    // english letters
                     
-                    letter = [NSString stringWithFormat:@"%c", characterCodes[i]];
+                    letter = [NSString stringWithFormat:@"%c", code];
                     NSLog(@"WARNING CODE %d - '%@'", code, letter);
                     callback(letter, size);
                 }
             }
             
         } else {
-            NSString *letter = [NSString stringWithFormat:@"%c", characterCodes[i]];
+            NSString *letter = [NSString stringWithFormat:@"%c", code];
             callback(letter, size);
         }
 
     }
+    
+    if (stringWithCallback) {
+        // The glyph widths are measured in units in which 1000 units corresponds to 1 unit in text space.
+        stringWithCallback(totalStringWidth/1000.0);
+    }
 }
 
-CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderState) {
+CGPDFReal xOffsetAfterDrawingCode(unsigned char code, double Tj, void *userInfo, void *renderState) {
     PDFFont *font = (__bridge PDFFont *)(userInfo);
     RenderingState *renderingState = (__bridge RenderingState *)(renderState);
     
@@ -486,7 +535,10 @@ CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderSta
     size_t charIndex = code - font.firstChar;
     CGPDFInteger w0 = 0;
     
-    if (countCodes > charIndex) {
+    if ((code > font.lastChar || code < font.firstChar) && font->_missingWidth > 0) {
+        // For character codes outside the range FirstChar to LastChar, the value of MissingWidth from the FontDescriptor entry for this font is used.
+        w0 = font->_missingWidth;
+    } else if (countCodes > charIndex) {
         w0 = font.widths.values[charIndex];
     } else {
         NSNumber *width = [font.cidWidths objectForKey:[NSNumber numberWithInteger:code]];
@@ -517,10 +569,69 @@ CGPDFInteger widthOfCharCode(unsigned char code, void *userInfo, void *renderSta
     
     if (code == 32) {
         Tw = renderingState.wordSpacing; // Word spacing works the same way as character spacing, but applies only to the space character, code 32.
+    } else if (w0 == 0) {
+        NSLog(@"Warning: char width code %d is zero", code);
     }
-    CGPDFReal width = (w0*Tfs + Tc + Tw)*Th;
     
-    return width;
+    CGPDFReal tx = ((w0 - (Tj/1000.0))*Tfs + Tc + Tw)*Th;
+    //    CGPDFReal width = (w0*Tfs + Tc + Tw)*Th;
+    
+    return tx;
+}
+
+CGPDFReal widthOfCharCode(unsigned char code, void *userInfo, void *renderState) {
+    PDFFont *font = (__bridge PDFFont *)(userInfo);
+    RenderingState *renderingState = (__bridge RenderingState *)(renderState);
+    
+    size_t countCodes = font.widths.size;
+    size_t charIndex = code - font.firstChar;
+    CGPDFInteger w0 = 0;
+    
+    if ((code > font.lastChar || code < font.firstChar) && font->_missingWidth > 0) {
+        // For character codes outside the range FirstChar to LastChar, the value of MissingWidth from the FontDescriptor entry for this font is used.
+        w0 = font->_missingWidth;
+    } else if (countCodes > charIndex) {
+        w0 = font.widths.values[charIndex];
+    } else {
+        NSNumber *width = [font.cidWidths objectForKey:[NSNumber numberWithInteger:code]];
+        if (width) {
+            w0 = width.floatValue;
+        } else {
+            NSString *letter = font.charToUnicode[@(code)];
+            NSLog(@"ERROR: [%@] get char width index: %zu, charCode %d:%@ widthsLength %zu", font.name, charIndex, code, letter, countCodes);
+            w0 = font->defaultWidth * 0.5;
+        }
+    }
+    
+
+    
+    /* Right way parsing text positiong after drawing glif
+     tx = ((w0 - (Tj/1000))*Tfs + Tc + Tw)*Th
+     ty = (w1 -(Tj/1000))*Tfs + Tc + Tw
+     
+     where:
+     w0 and w1 are the glyph’s horizontal and vertical displacements
+     Tj is a position adjustment specified by a number in a TJ array, if any
+     Tfs and Th are the current text font size and horizontal scaling parameters in the graphics state
+     Tc and Tw are the current character and word spacing parameters in the graphics state, if applicable
+     */
+    
+    CGPDFReal Tfs = renderingState.fontSize;
+    CGPDFReal Tc = 0; // we will add char spacing when calculate TJ // renderingState.characterSpacing;
+    CGPDFReal Tw = 0.0;
+    CGPDFReal Th = renderingState.horizontalScaling / 100.0;
+    CGPDFReal Tj = 0.0; // we want to know only glif width
+    
+    if (code == 32) {
+        Tw = renderingState.wordSpacing; // Word spacing works the same way as character spacing, but applies only to the space character, code 32.
+    } else if (w0 == 0) {
+        NSLog(@"Warning: char width code %d is zero", code);
+    }
+    
+    CGPDFReal tx = ((w0 - (Tj/1000.0))*Tfs + Tc + Tw)*Th;
+//    CGPDFReal width = (w0*Tfs + Tc + Tw)*Th;
+    
+    return tx;
 }
 
 CGPDFReal fontHeight(void *pdfFont, void *renderState) {
