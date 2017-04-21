@@ -35,8 +35,8 @@ class ViewController: UIViewController {
 //        guard let pdfPath = Bundle.main.path(forResource: "failsearch_resolved", ofType: "pdf") else {
 //        guard let pdfPath = Bundle.main.path(forResource: "failhighlight", ofType: "pdf") else {
 //        guard let pdfPath = Bundle.main.path(forResource: "check", ofType: "pdf") else {
-//        guard let pdfPath = Bundle.main.path(forResource: "failsearch", ofType: "pdf") else {
-        guard let pdfPath = Bundle.main.path(forResource: "offset", ofType: "pdf") else {
+        guard let pdfPath = Bundle.main.path(forResource: "failsearch", ofType: "pdf") else {
+//        guard let pdfPath = Bundle.main.path(forResource: "offset", ofType: "pdf") else {
         return
         }
         guard let pdfData = try? Data(contentsOf: URL(fileURLWithPath: pdfPath)) else {
@@ -46,7 +46,7 @@ class ViewController: UIViewController {
             return
         }
         
-        let pageIndex = 9
+        let pageIndex = 1
         
         if let pdfPageView = document.view(forPageNumber: pageIndex) {
             pdfPageView.layer.borderColor = UIColor.black.cgColor
@@ -61,7 +61,8 @@ class ViewController: UIViewController {
         drawResultsView.layer.borderWidth = 2
         drawResultsView.layer.borderColor = UIColor.blue.cgColor
         drawResultsView.searchResults = results
-        drawResultsView.frame = document.cropBoxRect(forPage: pageIndex)
+//        drawResultsView.frame = document.cropBoxRect(forPage: pageIndex)
+        drawResultsView.frame = view.bounds
         
         NSLog("Success open PDF, number pages is \(document.numberOfPages). Results count: \(results.count)")
     }

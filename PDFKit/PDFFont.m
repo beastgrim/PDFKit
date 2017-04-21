@@ -76,6 +76,8 @@ typedef enum {
     CGPDFInteger _flags;
     CharacterEncoding encoding;
     BOOL useDecode;
+    BOOL twoBytesDecoding;
+    NSString *_encodingName;
 }
 
 @synthesize type = _type, name = _name, spaceWidth = _spaceWidth, xHeight = _xHeight, capHeight = _capHeight, leading = _leading, firstChar = _firstChar, lastChar = _lastChar, widths = _widths, fontBBox = _fontBBox, bBoxRect = _bBoxRect, charSet = _charSet, cidWidths = _cidWidths, charToUnicode = _charToUnicode, ascent = _ascent;
@@ -148,7 +150,10 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
     
                 [self decodeDifferences:differences];
             }
-
+        }
+        const char * encodingName;
+        if (CGPDFDictionaryGetName(fontDict, kEncodingKey, &encodingName)) {
+            _encodingName = [NSString stringWithFormat:@"%s", encodingName];
         }
         
         CGPDFDictionaryRef fontDecriptor;
@@ -259,15 +264,19 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
             }
         }
     }
-
+    /*
     printf("Init font %s toUnicodeMap %ld cidWidths: %s\n", name.UTF8String, (unsigned long)_charToUnicode.count, self.cidWidths.description.UTF8String);
     printf("Widths: \n");
     for (int i = 0; i < _widths.size; i++) {
         NSString *letter = _charToUnicode[@(i)];
         printf("\t[%d]\t'%s'\t%ld\n", i, letter.UTF8String, _widths.values[i]);
-    }
-//    printf("\n");
+    } //*/
+
     useDecode = _charToUnicode.count > 0;
+    
+    // When the current font is a Type 0 font whose Encoding entry is Identity−H or Identity−V, the string to be shown is inter- preted as pairs of bytes representing CIDs, high-order byte first.
+    twoBytesDecoding = self.type == PDFFontType0 && [_encodingName hasPrefix:@"Identity"];
+    
     return self;
 }
 
@@ -428,6 +437,18 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
 
 - (void)setWidthsWithArray:(CGPDFArrayRef)widthsArray
 {
+    /*
+        C [w1 w2 ... wn]
+        Cfirst Clast w
+     In the first format, c is an integer specifying a starting CID value; it is followed by an array of n numbers that specify the widths for n consecutive CIDs, starting with c. The second format defines the same width, w, for all CIDs in the range
+     cfirst to clast .
+     
+     The following is an example of a W entry:
+     /W [   120 [400 325 500]
+            7080 8032 1000
+        ]
+     In this example, the glyphs for the characters having CIDs 120, 121, and 122 are 400, 325, and 500 units wide, respectively. CIDs in the range 7080 through 8032 all have a width of 1000 units.
+    */
     NSUInteger length = CGPDFArrayGetCount(widthsArray);
     int idx = 0;
     
@@ -435,7 +456,7 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
     {
         CGPDFInteger baseCid = 0;
         if (!CGPDFArrayGetInteger(widthsArray, idx++, &baseCid)) {
-            NSLog(@"ERROR: parsing Widths of CID font. Current idx:%uld/%uld", idx, length);
+            NSLog(@"ERROR: parsing Widths of CID font. Current idx:%uld/%lud", idx, length);
             break;
         }
         
@@ -475,56 +496,106 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
     
     const unsigned char * characterCodes = CGPDFStringGetBytePtr(pdfString);
     size_t count = CGPDFStringGetLength(pdfString);
-    
     CGPDFReal totalStringWidth = 0.0;
 
-    for (int i = 0; i < count; i++) {
+    if (twoBytesDecoding) {
         
-        const unsigned char code = characterCodes[i];
-        if (code == 0) continue;
+        if (count%2 == 0) {
 
-        const uint16_t code2 = characterCodes[i+1] + (characterCodes[i] << 8);  // 16 byte code
+            for (int i = 0; i < count; i++) {
 
-        CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
-        CGPDFReal height = fontHeight((__bridge void *)(self), (__bridge void *)(renderingState));
-        
-        CGPDFReal widthWithSpace = xOffsetAfterDrawingCode(code, Tj, (__bridge void *)(self), (__bridge void *)(renderingState));
-        totalStringWidth += widthWithSpace;
-
-        // The glyph widths are measured in units in which 1000 units corresponds to 1 unit in text space.
-        CGSize size = CGSizeMake(width/1000.0, height/1000.0);
-        
-        if (useDecode) {
-            NSString *letter = _charToUnicode[@(code)];
-            
-            if (letter) {
-                callback(letter, size);
+                const uint16_t code = characterCodes[i+1] + (characterCodes[i] << 8);  // 16 byte code
+                CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
+                CGPDFReal height = fontHeight((__bridge void *)(self), (__bridge void *)(renderingState));
                 
-            } else {
-                if (i+1 < count && _charToUnicode[@(code2)]) {
-                    letter = _charToUnicode[@(code2)];
-                    callback(letter, size);
-                    ++i; continue;
+                CGPDFReal widthWithSpace = xOffsetAfterDrawingCode(code, Tj, (__bridge void *)(self), (__bridge void *)(renderingState));
+                totalStringWidth += widthWithSpace;
+                
+                // The glyph widths are measured in units in which 1000 units corresponds to 1 unit in text space.
+                CGSize size = CGSizeMake(width/1000.0, height/1000.0);
+                
+                
+                if (useDecode) {
+                    NSString *letter = _charToUnicode[@(code)];
+
+                    if (letter) {
+                        callback(letter, size);
+                        ++i; continue;
+                        
+                    } else {    // english letters
+                        
+                        letter = [NSString stringWithFormat:@"%c", code];
+                        NSLog(@"WARNING CODE %d - '%@'", code, letter);
+                        callback(letter, size);
+                    }
                     
-                } else {    // english letters
-                    
-                    letter = [NSString stringWithFormat:@"%c", code];
-                    NSLog(@"WARNING CODE %d - '%@'", code, letter);
+                } else {
+                    NSString *letter = [NSString stringWithFormat:@"%c", code];
                     callback(letter, size);
                 }
             }
             
+            if (stringWithCallback) {
+                // The glyph widths are measured in units in which 1000 units corresponds to 1 unit in text space.
+                stringWithCallback(totalStringWidth/1000.0);
+            }
         } else {
-            NSString *letter = [NSString stringWithFormat:@"%c", code];
-            callback(letter, size);
+            NSLog(@"ERROR: pdfString uses 2 bytes decoding but count id not even");
+            return;
         }
+        
+    } else {
+        
+        for (int i = 0; i < count; i++) {
+            
+            const unsigned char code = characterCodes[i];
+            if (code == 0) continue;
+            
+            
+            CGPDFReal width = widthOfCharCode(code, (__bridge void *)(self), (__bridge void *)(renderingState));
+            CGPDFReal height = fontHeight((__bridge void *)(self), (__bridge void *)(renderingState));
+            
+            CGPDFReal widthWithSpace = xOffsetAfterDrawingCode(code, Tj, (__bridge void *)(self), (__bridge void *)(renderingState));
+            totalStringWidth += widthWithSpace;
+            
+            // The glyph widths are measured in units in which 1000 units corresponds to 1 unit in text space.
+            CGSize size = CGSizeMake(width/1000.0, height/1000.0);
+            
+            if (useDecode) {
+                NSString *letter = _charToUnicode[@(code)];
+                
+                if (letter) {
+                    callback(letter, size);
+                    
+                } else {
+                    const uint16_t code2 = characterCodes[i+1] + (characterCodes[i] << 8);  // 16 byte code
+                    
+                    if (i+1 < count && _charToUnicode[@(code2)]) {
+                        letter = _charToUnicode[@(code2)];
+                        callback(letter, size);
+                        ++i; continue;
+                        
+                    } else {    // english letters
+                        
+                        letter = [NSString stringWithFormat:@"%c", code];
+                        NSLog(@"WARNING CODE %d - '%@'", code, letter);
+                        callback(letter, size);
+                    }
+                }
+                
+            } else {
+                NSString *letter = [NSString stringWithFormat:@"%c", code];
+                callback(letter, size);
+            }
+            
+        }
+        
+        if (stringWithCallback) {
+            // The glyph widths are measured in units in which 1000 units corresponds to 1 unit in text space.
+            stringWithCallback(totalStringWidth/1000.0);
+        }
+    }
 
-    }
-    
-    if (stringWithCallback) {
-        // The glyph widths are measured in units in which 1000 units corresponds to 1 unit in text space.
-        stringWithCallback(totalStringWidth/1000.0);
-    }
 }
 
 CGPDFReal xOffsetAfterDrawingCode(unsigned char code, double Tj, void *userInfo, void *renderState) {
@@ -649,6 +720,7 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState) {
     
     CGPDFReal result = (ascent * scale * Tfs) * Th * globalYScale;
 
+    return ascent*Tfs;
     return result;
 }
 
@@ -671,7 +743,7 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState) {
 #pragma mark - Helpers
 - (void)setWidthsFrom:(CGPDFInteger)cid to:(CGPDFInteger)maxCid width:(CGPDFInteger)width {
     while (cid <= maxCid) {
-        [self.cidWidths setObject:[NSNumber numberWithInt:(int)width] forKey:[NSNumber numberWithInt:(int)cid++]];
+        [self.cidWidths setObject:[NSNumber numberWithInteger:width] forKey:[NSNumber numberWithInteger:cid++]];
     }
 }
 
@@ -684,7 +756,7 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState) {
     {
         if (CGPDFArrayGetInteger(array, index, &width))
         {
-            [self.cidWidths setObject:[NSNumber numberWithInt:(int)width] forKey:[NSNumber numberWithInt:(int)base + index]];
+            [self.cidWidths setObject:[NSNumber numberWithInteger:width] forKey:[NSNumber numberWithInteger:base + index]];
         }
     }
 }

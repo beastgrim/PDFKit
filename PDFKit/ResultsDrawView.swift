@@ -30,11 +30,16 @@ class ResultsDrawView: UIView {
 
             var textRect = res.cgRectValue
             textRect.origin.y -= textRect.size.height - 2
-
-//            ctx.setFillColor(UIColor(colorLiteralRed: 1, green: 0, blue: 0, alpha: 0.38).cgColor.components!)
-            ctx.setStrokeColor(UIColor(colorLiteralRed: 1, green: 0, blue: 0, alpha: 0.38).cgColor.components!)
-//            ctx.fill(textRect)
-            ctx.stroke(textRect)
+            
+            let stoke = false
+            
+            if stoke {
+                ctx.setStrokeColor(UIColor(colorLiteralRed: 1, green: 0, blue: 0, alpha: 0.38).cgColor.components!)
+                ctx.stroke(textRect)
+            } else {
+                ctx.setFillColor(UIColor(colorLiteralRed: 1, green: 0, blue: 0, alpha: 0.38).cgColor.components!)
+                ctx.fill(textRect)
+            }
             
 //            (i.description as NSString).drawInRect(textRect, withAttributes: [NSForegroundColorAttributeName: UIColor.redColor(), NSFontAttributeName: UIFont.boldSystemFontOfSize(16)])
         }

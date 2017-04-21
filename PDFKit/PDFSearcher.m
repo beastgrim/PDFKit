@@ -12,7 +12,7 @@
 #import "RenderingState.h"
 
 
-#define DEBUG_MODE 0
+#define PDFKit_DEBUG_MODE 0
 
 void stringAndSpacesCallback(CGPDFScannerRef inScanner, void *userInfo);
 void stringCallback(CGPDFScannerRef inScanner, void *userInfo);
@@ -144,8 +144,7 @@ void printPDFObject(CGPDFObjectRef pdfObject);
         CGFloat tx = cropBoxRect.origin.x;
         CGFloat ty = cropBoxRect.origin.y;
         self.renderingState.ctm = CGAffineTransformMake(1, 0, 0, -1, 0, mediaBoxRect.size.height);
-        self.renderingState.ctm = CGAffineTransformTranslate(self.renderingState.ctm, -tx*2, ty*2);
-        
+        self.renderingState.ctm = CGAffineTransformTranslate(self.renderingState.ctm, -tx, ty);
         
         [self fontCollectionWithPage:inPage];
         
@@ -187,15 +186,20 @@ const char *kFontKey = "Font";
         [weakSelf.unicodeContent appendFormat:@"%@", character];
         
         [text appendString:character];
-#if DEBUG_MODE == 1
+        
+#if PDFKit_DEBUG_MODE == 1
         CGAffineTransform trm = [weakSelf getTextRenderingMatrix];
+        CGFloat botX = trm.tx;
+        CGFloat botY = trm.ty;
         
-        searchRect = CGRectZero;
-        searchRect.size.height = glifSize.height;
-        searchRect.size.width = glifSize.width;
-        searchRect.origin.x = trm.tx;
-        searchRect.origin.y = trm.ty;
+        [weakSelf translateTextPosition:CGSizeMake(glifSize.width, -glifSize.height)];
+        trm = [weakSelf getTextRenderingMatrix];
+        CGFloat upX = trm.tx;
+        CGFloat upY = trm.ty;
         
+        CGRect searchRect = CGRectMake(botX, botY, upX-botX, upY-botY);
+        [weakSelf translateTextPosition:CGSizeMake(-glifSize.width, glifSize.height)];
+
         [weakSelf savePDFSearchRect:searchRect];
         [weakSelf translateTextPositionWithGlifSize:glifSize tj:tj];
         
@@ -213,23 +217,24 @@ const char *kFontKey = "Font";
                 CGAffineTransform trm = [weakSelf getTextRenderingMatrix];
                 
                 searchRect = CGRectZero;
-                searchRect.size = glifSize;
                 searchRect.origin.x = trm.tx;
                 searchRect.origin.y = trm.ty;
             }
             
             if (foundIndex == searchLength) {       // save result and start new search
                 
-                [weakSelf translateTextPosition:CGSizeMake(glifSize.width, 0)];
-                
+                [weakSelf translateTextPosition:glifSize];
                 CGAffineTransform trm = [weakSelf getTextRenderingMatrix];
-                
+
                 CGFloat offsetX = trm.tx - searchRect.origin.x;
                 if (offsetX < 0) { // we are maybe on other line
                     NSLog(@"WARNING: start X of serach text is greater then end X of search text!");
                 }
                 searchRect.size.width = MAX(5, offsetX);
-                
+                searchRect.size.height = searchRect.origin.y - trm.ty;
+                // return Y position back
+                [weakSelf translateTextPosition:CGSizeMake(0, -glifSize.height)];
+
                 [weakSelf savePDFSearchRect:searchRect];
                 foundIndex = 0;
                 
@@ -262,7 +267,6 @@ const char *kFontKey = "Font";
     CGPDFReal Tw = 0.0; // word spacing applied on glif width
     CGPDFReal Th = renderState.horizontalScaling/100;
     CGPDFReal tx = ((w0 - (tj/1000.0))*Tfs + Tc + Tw)*Th;
-//    CGPDFReal tx = ((w0 - tj/1000.0)*Tfs + Tc + Tw)*Th;
     
     [self translateTextPosition:CGSizeMake(tx, 0)];
 }
@@ -320,8 +324,9 @@ void handleFontDictionary(const char *key, CGPDFObjectRef ob, void *info) {
         return;
     }
 
+    /*
     NSLog(@"PRINT FONT: %s", key);
-    printPDFObject(ob);
+    printPDFObject(ob); //*/
 
     NSString *fontName = [NSString stringWithFormat:@"%s", key];
     PDFFont *font = [[PDFFont alloc] initWithName:fontName fontDict:fontDict];
@@ -388,7 +393,7 @@ void fontInfoCallback(CGPDFScannerRef inScanner, void *userInfo)
     CGPDFScannerPopName(inScanner, &font_name);
 //    NSLog(@"Font: %s size: %f", fontName, fontSize);
     NSString *fontName = [NSString stringWithFormat:@"%s", font_name];
-    [searcher.unicodeContent appendFormat:@"[%@]", fontName];
+//    [searcher.unicodeContent appendFormat:@"[%@]", fontName];
     searcher->currentFontName = fontName;
     searcher.renderingState.fontSize = fontSize;
     PDFFont *font = searcher.fontByFontName[fontName];
@@ -574,7 +579,7 @@ void setRenderingMode(CGPDFScannerRef pdfScanner, void *userInfo) {
     CGPDFInteger mode;
     CGPDFScannerPopInteger(pdfScanner, &mode);
     
-    NSLog(@"Rendering mode is %ld", mode);
+//    NSLog(@"Rendering mode is %ld", mode);
 }
 
 
