@@ -322,6 +322,8 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
                 NSString * codeStr = [key substringFromIndex:3];
                 unichar code = strtol([codeStr UTF8String], nil, 16);
                 _charToUnicode[@(curDifIndex)] = [NSString stringWithFormat:@"%C", code];
+            } else if (key.length == 1) {
+                _charToUnicode[@(curDifIndex)] = key;
             } else {
                 _charToUnicode[@(curDifIndex)] = standartCirillicGlifs[key];
             }
@@ -528,7 +530,7 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
                     } else {    // english letters
                         
                         letter = [NSString stringWithFormat:@"%c", code];
-                        NSLog(@"WARNING CODE %d - '%@'", code, letter);
+                        NSLog(@"WARNING CODE [%@] %d - '%@'", self.name, code, letter);
                         callback(letter, size);
                     }
                     
@@ -578,10 +580,10 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
                         callback(letter, size);
                         ++i; continue;
                         
-                    } else {    // english letters
+                    } else {    // maybe english letters
                         
                         letter = [NSString stringWithFormat:@"%c", code];
-                        NSLog(@"WARNING CODE %d - '%@'", code, letter);
+                        NSLog(@"WARNING CODE [%@] %d - '%@'", self.name, code, letter);
                         callback(letter, size);
                     }
                 }

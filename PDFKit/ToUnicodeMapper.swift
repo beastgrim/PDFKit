@@ -79,6 +79,7 @@ class ToUnicodeMapper: NSObject {
                                                               "afii10096":"ю",
                                                               "afii10097":"я",
                                                               
+                                                              "afii61352":"№",
                                                               "space":" ",
                                                               "exclam":"!",
                                                               "quotedbl":"\"",
@@ -112,6 +113,7 @@ class ToUnicodeMapper: NSObject {
                                                               "greater":">",
                                                               "question":"?",
                                                               "at":"@",
+                                                              "ellipsis": "...",
                                                               
                                                               "guillemotleft":"«",
                                                               "guillemotright":"»"
