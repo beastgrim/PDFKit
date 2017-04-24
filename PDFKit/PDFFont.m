@@ -81,8 +81,8 @@ typedef enum {
 }
 
 @synthesize type = _type, name = _name, spaceWidth = _spaceWidth, xHeight = _xHeight, capHeight = _capHeight, leading = _leading, firstChar = _firstChar, lastChar = _lastChar, widths = _widths, fontBBox = _fontBBox, bBoxRect = _bBoxRect, charSet = _charSet, cidWidths = _cidWidths, charToUnicode = _charToUnicode, ascent = _ascent;
-CGPDFReal widthOfCharCode(unsigned char code, void *userInfo, void *renderState);
-CGPDFReal xOffsetAfterDrawingCode(unsigned char code, double Tj, void *userInfo, void *renderState);
+CGPDFReal widthOfCharCode(uint16_t code, void *userInfo, void *renderState);
+CGPDFReal xOffsetAfterDrawingCode(uint16_t code, CGPDFReal Tj, void *userInfo, void *renderState);
 CGPDFReal fontHeight(void *pdfFont, void *renderState);
 
 
@@ -264,7 +264,7 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
             }
         }
     }
-    /*
+    //*
     printf("Init font %s toUnicodeMap %ld cidWidths: %s\n", name.UTF8String, (unsigned long)_charToUnicode.count, self.cidWidths.description.UTF8String);
     printf("Widths: \n");
     for (int i = 0; i < _widths.size; i++) {
@@ -462,8 +462,9 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
         
         CGPDFObjectRef integerOrArray = nil;
         CGPDFArrayGetObject(widthsArray, idx++, &integerOrArray);
+        CGPDFObjectType type = CGPDFObjectGetType(integerOrArray);
         
-        if (CGPDFObjectGetType(integerOrArray) == kCGPDFObjectTypeInteger)
+        if (type == kCGPDFObjectTypeInteger)
         {
             // [ first last width ]             cfirst clast w
             CGPDFInteger maxCid;
@@ -472,12 +473,14 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
             CGPDFArrayGetInteger(widthsArray, idx++, &glyphWidth);
             [self setWidthsFrom:baseCid to:maxCid width:glyphWidth];
         }
-        else
+        else if (type == kCGPDFObjectTypeArray)
         {
             // [ first list-of-widths ]         c [w1 w2 ... wn]
             CGPDFArrayRef glyphWidths;
             CGPDFObjectGetValue(integerOrArray, kCGPDFObjectTypeArray, &glyphWidths);
             [self setWidthsWithBase:baseCid array:glyphWidths];
+        } else {
+            NSLog(@"ERROR: unexpected type occured while parse the Width array");
         }
     }
 }
@@ -598,12 +601,12 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState);
 
 }
 
-CGPDFReal xOffsetAfterDrawingCode(unsigned char code, double Tj, void *userInfo, void *renderState) {
+CGPDFReal xOffsetAfterDrawingCode(uint16_t code, CGPDFReal Tj, void *userInfo, void *renderState) {
     PDFFont *font = (__bridge PDFFont *)(userInfo);
     RenderingState *renderingState = (__bridge RenderingState *)(renderState);
     
     size_t countCodes = font.widths.size;
-    size_t charIndex = code - font.firstChar;
+    uint16_t charIndex = code - font.firstChar;
     CGPDFInteger w0 = 0;
     
     if ((code > font.lastChar || code < font.firstChar) && font->_missingWidth > 0) {
@@ -618,7 +621,7 @@ CGPDFReal xOffsetAfterDrawingCode(unsigned char code, double Tj, void *userInfo,
         } else {
             NSString *letter = font.charToUnicode[@(code)];
             NSLog(@"ERROR: [%@] get char width index: %zu, charCode %d:%@ widthsLength %zu", font.name, charIndex, code, letter, countCodes);
-            w0 = font->defaultWidth * 0.5;
+            w0 = font->defaultWidth;
         }
     }
     
@@ -650,12 +653,12 @@ CGPDFReal xOffsetAfterDrawingCode(unsigned char code, double Tj, void *userInfo,
     return tx;
 }
 
-CGPDFReal widthOfCharCode(unsigned char code, void *userInfo, void *renderState) {
+CGPDFReal widthOfCharCode(uint16_t code, void *userInfo, void *renderState) {
     PDFFont *font = (__bridge PDFFont *)(userInfo);
     RenderingState *renderingState = (__bridge RenderingState *)(renderState);
     
     size_t countCodes = font.widths.size;
-    size_t charIndex = code - font.firstChar;
+    uint16_t charIndex = code - font.firstChar;
     CGPDFInteger w0 = 0;
     
     if ((code > font.lastChar || code < font.firstChar) && font->_missingWidth > 0) {
@@ -670,7 +673,7 @@ CGPDFReal widthOfCharCode(unsigned char code, void *userInfo, void *renderState)
         } else {
             NSString *letter = font.charToUnicode[@(code)];
             NSLog(@"ERROR: [%@] get char width index: %zu, charCode %d:%@ widthsLength %zu", font.name, charIndex, code, letter, countCodes);
-            w0 = font->defaultWidth * 0.5;
+            w0 = font->defaultWidth;
         }
     }
     
@@ -743,7 +746,8 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState) {
 #pragma mark - Helpers
 - (void)setWidthsFrom:(CGPDFInteger)cid to:(CGPDFInteger)maxCid width:(CGPDFInteger)width {
     while (cid <= maxCid) {
-        [self.cidWidths setObject:[NSNumber numberWithInteger:width] forKey:[NSNumber numberWithInteger:cid++]];
+        [self.cidWidths setObject:[NSNumber numberWithInteger:width] forKey:[NSNumber numberWithInteger:cid]];
+        cid++;
     }
 }
 
@@ -754,9 +758,10 @@ CGPDFReal fontHeight(void *pdfFont, void *renderState) {
     
     for (int index = 0; index < count ; index++)
     {
-        if (CGPDFArrayGetInteger(array, index, &width))
-        {
+        if (CGPDFArrayGetInteger(array, index, &width)) {
             [self.cidWidths setObject:[NSNumber numberWithInteger:width] forKey:[NSNumber numberWithInteger:base + index]];
+        } else {
+            NSLog(@"ERROR: failed when get width of glif");
         }
     }
 }
